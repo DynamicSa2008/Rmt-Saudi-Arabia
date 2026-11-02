@@ -155,10 +155,11 @@ function rmt_seo_head() {
 		echo '<link rel="canonical" href="' . esc_url( $canon ) . '">' . "\n";
 	}
 	// hreflang pairs between the Arabic and English versions of the same page.
-	if ( $key ) {
-		echo '<link rel="alternate" hreflang="ar" href="' . esc_url( rmt_page_url( $key, 'ar' ) ) . '">' . "\n";
-		echo '<link rel="alternate" hreflang="en" href="' . esc_url( rmt_page_url( $key, 'en' ) ) . '">' . "\n";
-		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url( rmt_page_url( $key, 'ar' ) ) . '">' . "\n";
+	$alt = $key ? $key : ( function_exists( 'rmt_legal_key' ) ? rmt_legal_key() : '' );
+	if ( $alt ) {
+		echo '<link rel="alternate" hreflang="ar" href="' . esc_url( rmt_page_url( $alt, 'ar' ) ) . '">' . "\n";
+		echo '<link rel="alternate" hreflang="en" href="' . esc_url( rmt_page_url( $alt, 'en' ) ) . '">' . "\n";
+		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url( rmt_page_url( $alt, 'ar' ) ) . '">' . "\n";
 	}
 	// Local SEO geo tags.
 	echo '<meta name="geo.region" content="SA-01">' . "\n";
@@ -522,5 +523,17 @@ add_action(
 		if ( ! get_option( 'rmt_media_date' ) ) {
 			update_option( 'rmt_media_date', time() );
 		}
+	}
+);
+
+/** Use the localized company name in <title> on non-panel pages (e.g. legal pages in English). */
+add_filter(
+	'document_title_parts',
+	function ( $parts ) {
+		if ( isset( $parts['site'] ) ) {
+			$parts['site'] = rmt_get( 'general', 'short_name' );
+		}
+		unset( $parts['tagline'] );
+		return $parts;
 	}
 );

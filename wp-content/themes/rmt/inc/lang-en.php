@@ -113,7 +113,7 @@ return array(
 	'اتصل الآن'                    => 'Call now',
 	'نموذج طلب عرض سعر'            => 'Quotation request form',
 	'الحقول المعلّمة بـ * مطلوبة. نرد عادة خلال ساعات العمل.' => 'Fields marked * are required. We usually reply within working hours.',
-	'تعذّر إرسال الطلب، يرجى التأكد من الاسم ورقم الجوال ثم المحاولة مجددًا، أو التواصل عبر واتساب.' => 'We could not send your request. Please check your name and mobile number and try again, or contact us on WhatsApp.',
+	'تعذّر إرسال الطلب، يرجى التأكد من الاسم ورقم الجوال والموافقة على سياسة الخصوصية ثم المحاولة مجددًا، أو التواصل عبر واتساب.' => 'We could not send your request. Please check your name, mobile number and privacy consent, then try again — or contact us on WhatsApp.',
 	'الموقع'                       => 'Website',
 	'الاسم *'                      => 'Name *',
 	'اسم الجهة'                    => 'Organisation',
@@ -158,6 +158,29 @@ return array(
 	'المشروع التالي'                => 'Next project',
 	'أريد نتيجة مثلها'              => 'I want this result',
 	'المشاريع'                     => 'Projects',
+
+	// Clients page.
+	'عميل وشريك نجاح'              => 'Clients & partners',
+	'جهات حكومية'                  => 'Government entities',
+	'فنادق ومستشفيات'               => 'Hotels & hospitals',
+	'جدار الثقة'                   => 'Wall of Trust',
+	'جهات حكومية وشركات وفنادق ومستشفيات اختارتنا لأعمال النظافة والواجهات.' => 'Government bodies, companies, hotels and hospitals that chose us for cleaning and façade work.',
+	'شركاء النجاح'                 => 'Our partners',
+	'تصنيف العملاء'                => 'Client categories',
+	'أين عملنا'                    => 'Where We Have Worked',
+	'من مقرنا في الرياض إلى المنطقة الشرقية ومملكة البحرين.' => 'From our Riyadh headquarters to the Eastern Province and the Kingdom of Bahrain.',
+	'حضورنا'                       => 'Our presence',
+	'المنطقة الشرقية'               => 'Eastern Province',
+	'الدمام'                       => 'Dammam',
+	'أمانة منطقة الرياض، أبراج ومجمعات تجارية، فنادق ومستشفيات وبنوك.' => 'Riyadh Region Municipality, towers and commercial complexes, hotels, hospitals and banks.',
+	'عقود نظافة لأمانة منطقة الدمام.' => 'Cleaning contracts for Dammam Region Municipality.',
+
+	// Legal & consent.
+	'آخر تحديث:'                   => 'Last updated:',
+	'الصفحات القانونية'              => 'Legal pages',
+	'أوافق على'                    => 'I agree to the',
+	'سياسة الخصوصية'               => 'Privacy Policy',
+	'ومعالجة بياناتي للرد على طلبي.' => 'and to the processing of my data to answer my request.',
 
 	// 404 & blog.
 	'الصفحة غير موجودة'             => 'Page not found',

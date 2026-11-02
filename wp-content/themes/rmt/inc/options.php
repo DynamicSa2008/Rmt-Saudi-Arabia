@@ -36,12 +36,12 @@ function rmt_raw_options() {
  */
 function rmt_options() {
 	static $cache = array();
-	$lang = function_exists( 'rmt_lang' ) ? rmt_lang() : 'ar';
+	$lang = ( function_exists( 'rmt_lang' ) ? rmt_lang() : 'ar' ) . ':' . ( isset( $GLOBALS['rmt_opt_ver'] ) ? (int) $GLOBALS['rmt_opt_ver'] : 0 );
 	if ( isset( $cache[ $lang ] ) ) {
 		return $cache[ $lang ];
 	}
 	$o = rmt_raw_options();
-	if ( 'en' === $lang ) {
+	if ( 0 === strpos( $lang, 'en:' ) ) {
 		$o = rmt_localize_options( $o );
 	}
 	$cache[ $lang ] = $o;
@@ -351,6 +351,16 @@ function rmt_panel_schema() {
 					array( 'contact.success', 'textarea', 'رسالة نجاح الإرسال' ),
 					array( 'contact.recipients', 'text', 'الإيميلات المستلمة للطلبات', 'افصل بينها بفاصلة.' ),
 				) ),
+				array( 'title' => 'إعدادات إرسال الإيميل (SMTP) – لضمان وصول الطلبات', 'fields' => array(
+					array( 'contact.smtp_on', 'toggle', 'تفعيل الإرسال عبر SMTP', 'بدونه يعتمد الإرسال على سيرفر الاستضافة، وكثير منها لا يوصل الرسائل أو يرسلها للسبام.' ),
+					array( 'contact.smtp_host', 'text', 'سيرفر SMTP', 'Gmail: smtp.gmail.com — بريد الدومين: من لوحة الاستضافة (مثل mail.rmt-cleaning.com).' ),
+					array( 'contact.smtp_port', 'text', 'المنفذ (Port)', '587 مع TLS (الأشهر) أو 465 مع SSL.' ),
+					array( 'contact.smtp_secure', 'select', 'التشفير', '', array( 'tls' => 'TLS', 'ssl' => 'SSL', 'none' => 'بدون' ) ),
+					array( 'contact.smtp_user', 'text', 'اسم المستخدم (البريد كاملًا)' ),
+					array( 'contact.smtp_pass', 'password', 'كلمة المرور', 'لـ Gmail استخدم "كلمة مرور التطبيقات" (App Password) وليس كلمة مرور الحساب. اتركها فارغة للإبقاء على المحفوظة.' ),
+					array( 'contact.from_email', 'email', 'الإرسال من (From)', 'يُفضّل نفس بريد SMTP لتجنب السبام.' ),
+					array( 'contact.from_name', 'text', 'اسم المرسل' ),
+				) ),
 			),
 		),
 
@@ -425,6 +435,8 @@ function rmt_sanitize_value( $type, $value, $opts = array() ) {
 			return esc_url_raw( trim( (string) $value ) );
 		case 'email':
 			return sanitize_email( $value );
+		case 'password':
+			return trim( (string) $value );
 		case 'map_embed':
 			$value = html_entity_decode( (string) $value );
 			if ( preg_match( '#https://www\.google\.com/maps/embed\?[^"\'\s<>]+#', $value, $m ) ) {
@@ -500,6 +512,9 @@ function rmt_sanitize_options( $input, $lang = 'ar' ) {
 					if ( ! array_key_exists( $store, $input[ $section ] ) ) {
 						continue;
 					}
+					if ( 'password' === $type && '' === trim( (string) $input[ $section ][ $store ] ) ) {
+						continue; // Keep the saved password when the field is left empty.
+					}
 					$out[ $section ][ $store ] = rmt_sanitize_value( $type, $input[ $section ][ $store ], isset( $f[4] ) ? $f[4] : array() );
 				}
 			}
@@ -523,3 +538,19 @@ function rmt_map_embed_url() {
 	$q = ( $g['lat'] && $g['lng'] ) ? $g['lat'] . ',' . $g['lng'] : $g['map_embed_query'];
 	return 'https://maps.google.com/maps?q=' . rawurlencode( $q ) . '&hl=' . ( rmt_is_en() ? 'en' : 'ar' ) . '&z=16&output=embed';
 }
+
+/** Invalidate the per-request options cache whenever the option changes. */
+add_action(
+	'update_option_' . RMT_OPTION,
+	function () {
+		$GLOBALS['rmt_opt_ver'] = ( isset( $GLOBALS['rmt_opt_ver'] ) ? (int) $GLOBALS['rmt_opt_ver'] : 0 ) + 1;
+	},
+	1
+);
+add_action(
+	'add_option_' . RMT_OPTION,
+	function () {
+		$GLOBALS['rmt_opt_ver'] = ( isset( $GLOBALS['rmt_opt_ver'] ) ? (int) $GLOBALS['rmt_opt_ver'] : 0 ) + 1;
+	},
+	1
+);

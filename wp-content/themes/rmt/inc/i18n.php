@@ -71,7 +71,7 @@ function rmt_i18n_skip() {
 		'general.postal_code', 'general.map_embed_query', 'general.lat', 'general.lng', 'general.name_en',
 		'general.email_primary', 'general.email_secondary',
 		'seo.ga4', 'seo.gtm', 'seo.gsc', 'seo.bing', 'seo.yandex', 'seo.price_range',
-		'contact.recipients',
+		'contact.recipients', 'contact.smtp_host', 'contact.smtp_port', 'contact.smtp_user', 'contact.from_name',
 		'sub.number', 'sub.suffix', 'sub.floors', 'sub.area', 'sub.team', 'sub.name@about.certs',
 	);
 }

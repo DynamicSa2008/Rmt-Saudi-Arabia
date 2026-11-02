@@ -42,6 +42,7 @@ function rmt_lead_columns( $cols ) {
 		'rmt_phone'   => 'الجوال',
 		'rmt_service' => 'الخدمة',
 		'rmt_city'    => 'المدينة',
+		'rmt_mail'    => 'الإيميل',
 		'date'        => 'التاريخ',
 	);
 }
@@ -49,6 +50,11 @@ add_filter( 'manage_rmt_lead_posts_columns', 'rmt_lead_columns' );
 
 /** Column values. */
 function rmt_lead_column_value( $col, $post_id ) {
+	if ( 'rmt_mail' === $col ) {
+		$m = get_post_meta( $post_id, '_mail_sent', true );
+		echo '1' === $m ? '<span style="color:#1faa53">✔ وصل</span>' : ( '0' === $m ? '<span style="color:#d63638">✖ لم يُرسل</span>' : '—' );
+		return;
+	}
 	$map = array( 'rmt_phone' => '_phone', 'rmt_service' => '_service', 'rmt_city' => '_city' );
 	if ( isset( $map[ $col ] ) ) {
 		$v = get_post_meta( $post_id, $map[ $col ], true );
@@ -97,7 +103,7 @@ function rmt_handle_quote() {
 	}
 	$f['email'] = sanitize_email( $f['email'] );
 
-	if ( '' === $f['name'] || ! preg_match( '/^[0-9+\s\-]{9,16}$/', $f['phone'] ) ) {
+	if ( '' === $f['name'] || ! preg_match( '/^[0-9+\s\-]{9,16}$/', $f['phone'] ) || empty( $_POST['consent'] ) ) {
 		wp_safe_redirect( add_query_arg( 'err', 'fields', $back ) . '#quote' );
 		exit;
 	}
@@ -131,15 +137,15 @@ function rmt_handle_quote() {
 		update_post_meta( $post_id, '_city', $f['city'] );
 	}
 
-	$to = array_filter( array_map( 'sanitize_email', array_map( 'trim', explode( ',', rmt_get( 'contact', 'recipients' ) ) ) ) );
-	if ( ! $to ) {
-		$to = array( get_option( 'admin_email' ) );
-	}
+	$to = rmt_mail_recipients();
 	$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
 	if ( is_email( $f['email'] ) ) {
 		$headers[] = 'Reply-To: ' . $f['name'] . ' <' . $f['email'] . '>';
 	}
-	wp_mail( $to, 'طلب عرض سعر جديد: ' . $f['service'] . ' – ' . $f['name'], $body . "\n— " . home_url( '/' ), $headers );
+	$sent = wp_mail( $to, 'طلب عرض سعر جديد: ' . $f['service'] . ' – ' . $f['name'], $body . "\n— " . home_url( '/' ), $headers );
+	if ( $post_id && ! is_wp_error( $post_id ) ) {
+		update_post_meta( $post_id, '_mail_sent', $sent ? '1' : '0' );
+	}
 
 	wp_safe_redirect( add_query_arg( 'sent', '1', $back ) . '#quote' );
 	exit;

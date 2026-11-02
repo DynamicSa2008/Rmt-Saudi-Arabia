@@ -197,6 +197,14 @@ function rmt_defaults() {
 			'intro'      => 'يسعدنا الرد على استفساراتك وتقديم معاينة وعرض سعر لمشروعك. املأ النموذج أو تواصل معنا مباشرة عبر الهاتف أو واتساب.',
 			'success'    => 'شكرًا لتواصلك معنا، تم استلام طلبك وسيتواصل معك فريقنا في أقرب وقت.',
 			'recipients' => 'info@rmt-cleaning.com, rafalalmadinah@gmail.com',
+			'smtp_on'    => '0',
+			'smtp_host'  => '',
+			'smtp_port'  => '587',
+			'smtp_secure'=> 'tls',
+			'smtp_user'  => '',
+			'smtp_pass'  => '',
+			'from_email' => '',
+			'from_name'  => 'رفال المدينة للمقاولات',
 		),
 
 		/* ---------------- SEO ---------------- */

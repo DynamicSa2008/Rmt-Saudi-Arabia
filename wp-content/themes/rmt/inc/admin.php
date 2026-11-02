@@ -195,6 +195,9 @@ function rmt_render_input( $type, $name, $value, $opts = array(), $id = '' ) {
 		case 'url':
 			printf( '<input type="url" name="%s"%s value="%s" dir="ltr">', esc_attr( $name ), $id_attr, esc_attr( $value ) );
 			break;
+		case 'password':
+			printf( '<input type="password" name="%s"%s value="" autocomplete="new-password" placeholder="%s" dir="ltr">', esc_attr( $name ), $id_attr, $value ? '•••••••• (محفوظة)' : '' );
+			break;
 		case 'email':
 			printf( '<input type="email" name="%s"%s value="%s" dir="ltr">', esc_attr( $name ), $id_attr, esc_attr( $value ) );
 			break;
@@ -271,6 +274,17 @@ function rmt_render_panel() {
 		<?php if ( 'en' === rmt_panel_lang() ) : ?>
 			<div class="notice notice-info rmt-en-note"><p><strong>أنت تعدّل النسخة الإنجليزية.</strong> الحقول المعلّمة بـ <em class="rmt-lang-tag">EN</em> خاصة بالإنجليزي، أما الصور والأرقام والروابط فمشتركة بين اللغتين.</p></div>
 		<?php endif; ?>
+		<?php
+		$mt = get_transient( 'rmt_mail_test' );
+		if ( in_array( $msg, array( 'mail_ok', 'mail_fail' ), true ) && $mt ) :
+			delete_transient( 'rmt_mail_test' );
+			?>
+			<?php if ( $mt['ok'] ) : ?>
+				<div class="notice notice-success is-dismissible"><p>✔ تم حفظ الإعدادات وإرسال الإيميل التجريبي إلى <code dir="ltr"><?php echo esc_html( $mt['to'] ); ?></code>. افحص صندوق الوارد (والسبام أول مرة).</p></div>
+			<?php else : ?>
+				<div class="notice notice-error is-dismissible"><p>✖ فشل إرسال الإيميل التجريبي. السبب: <code dir="ltr"><?php echo esc_html( $mt['err'] ? $mt['err'] : 'غير معروف' ); ?></code><br>تأكد من بيانات SMTP (السيرفر، المنفذ، كلمة مرور التطبيقات).</p></div>
+			<?php endif; ?>
+		<?php endif; ?>
 		<?php if ( 'saved' === $msg ) : ?>
 			<div class="notice notice-success is-dismissible"><p>تم حفظ التغييرات بنجاح ✔</p></div>
 		<?php elseif ( 'reset' === $msg ) : ?>
@@ -342,6 +356,20 @@ function rmt_render_panel() {
 									<?php endforeach; ?>
 								</div>
 							<?php endforeach; ?>
+
+							<?php if ( 'contact' === $id ) : ?>
+								<div class="rmt-card rmt-mail-test">
+									<h3>اختبار وصول الإيميل</h3>
+									<p>يحفظ الإعدادات ثم يرسل رسالة تجريبية إلى: <code dir="ltr"><?php echo esc_html( implode( ', ', rmt_mail_recipients() ) ); ?></code></p>
+									<button type="submit" class="button button-primary" name="action" value="rmt_test_mail" formnovalidate>✉ حفظ وإرسال إيميل تجريبي</button>
+									<?php
+									$last = get_option( 'rmt_last_mail_error' );
+									if ( $last && ! empty( $last['msg'] ) && time() - (int) $last['time'] < 7 * DAY_IN_SECONDS ) :
+										?>
+										<p class="rmt-mail-err">آخر خطأ في الإرسال (<?php echo esc_html( wp_date( 'Y-m-d H:i', (int) $last['time'] ) ); ?>): <code dir="ltr"><?php echo esc_html( $last['msg'] ); ?></code></p>
+									<?php endif; ?>
+								</div>
+							<?php endif; ?>
 
 							<?php if ( 'seo' === $id ) : ?>
 								<div class="rmt-card rmt-seo-check" data-tour="seo-check">

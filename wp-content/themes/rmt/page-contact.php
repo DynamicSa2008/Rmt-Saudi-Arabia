@@ -44,7 +44,7 @@ $embed = rmt_map_embed_url();
 			<?php if ( $sent ) : ?>
 				<div class="alert ok" role="status"><?php echo rmt_icon( 'check', 20 ); // phpcs:ignore ?><?php echo esc_html( $ct['success'] ); ?></div>
 			<?php elseif ( $err ) : ?>
-				<div class="alert err" role="alert"><?php rmt_te( 'تعذّر إرسال الطلب، يرجى التأكد من الاسم ورقم الجوال ثم المحاولة مجددًا، أو التواصل عبر واتساب.' ); ?></div>
+				<div class="alert err" role="alert"><?php rmt_te( 'تعذّر إرسال الطلب، يرجى التأكد من الاسم ورقم الجوال والموافقة على سياسة الخصوصية ثم المحاولة مجددًا، أو التواصل عبر واتساب.' ); ?></div>
 			<?php endif; ?>
 
 			<form class="quote-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" novalidate data-form>
@@ -73,6 +73,7 @@ $embed = rmt_map_embed_url();
 				</div>
 				<label class="fld"><span><?php rmt_te( 'نوع المبنى وعدد الأدوار' ); ?></span><input type="text" name="building" placeholder="<?php echo esc_attr( rmt_t( 'مثال: برج تجاري – 18 دورًا' ) ); ?>"></label>
 				<label class="fld"><span><?php rmt_te( 'تفاصيل إضافية' ); ?></span><textarea name="details" rows="4"></textarea></label>
+				<label class="consent"><input type="checkbox" name="consent" value="1" required> <span><?php rmt_te( 'أوافق على' ); ?> <a href="<?php echo esc_url( rmt_page_url( 'privacy' ) ); ?>" target="_blank"><?php rmt_te( 'سياسة الخصوصية' ); ?></a> <?php rmt_te( 'ومعالجة بياناتي للرد على طلبي.' ); ?> *</span></label>
 				<button class="btn btn-primary btn-block" type="submit"><?php echo rmt_icon( 'mail', 20 ); // phpcs:ignore ?><?php rmt_te( 'إرسال الطلب' ); ?></button>
 			</form>
 		</div>

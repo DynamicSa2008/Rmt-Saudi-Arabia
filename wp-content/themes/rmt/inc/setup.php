@@ -155,19 +155,58 @@ function rmt_install() {
 		}
 	}
 
+	rmt_install_legal();
+
 	update_option( 'show_on_front', 'page' );
 	update_option( 'page_on_front', $ids['home'] );
+	global $wp_rewrite;
 	if ( false === strpos( (string) get_option( 'permalink_structure' ), '%postname%' ) ) {
-		update_option( 'permalink_structure', '/%postname%/' );
+		// set_permalink_structure() updates the option AND the in-memory rewrite
+		// object, so the flush below writes the right rules to .htaccess.
+		$wp_rewrite->set_permalink_structure( '/%postname%/' );
 	}
 	update_option( 'timezone_string', 'Asia/Riyadh' );
 	update_option( 'blogname', 'رفال المدينة للمقاولات' );
 	update_option( 'blogdescription', 'شركة تنظيف واجهات المباني والأبراج بالرياض' );
 	update_option( 'start_of_week', 6 );
 	update_option( 'rmt_installed', wp_get_theme()->get( 'Version' ) );
-	flush_rewrite_rules();
+	$wp_rewrite->init();
+	flush_rewrite_rules( true );
 }
 add_action( 'after_switch_theme', 'rmt_install' );
+
+/**
+ * Safety net for Apache hosts (e.g. LocalWP/Apache, cPanel): make sure
+ * .htaccess carries the WordPress rewrite block, otherwise every inner page
+ * (/about/, /en/about/ …) returns 404.
+ */
+function rmt_ensure_rewrites() {
+	if ( ! current_user_can( 'manage_options' ) || ! get_option( 'permalink_structure' ) ) {
+		return;
+	}
+	$rules = get_option( 'rewrite_rules' );
+	$need  = empty( $rules );
+	if ( ! $need && function_exists( 'got_mod_rewrite' ) && got_mod_rewrite() ) {
+		$ht   = get_home_path() . '.htaccess';
+		$need = ! file_exists( $ht ) || false === strpos( (string) file_get_contents( $ht ), 'RewriteRule' ); // phpcs:ignore
+	}
+	if ( $need ) {
+		flush_rewrite_rules( true );
+	}
+}
+add_action(
+	'admin_init',
+	function () {
+		if ( ! function_exists( 'get_home_path' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		if ( ! function_exists( 'got_mod_rewrite' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/misc.php';
+		}
+		rmt_ensure_rewrites();
+	},
+	20
+);
 
 /** Re-run installer silently if pages were removed. */
 function rmt_maybe_install() {

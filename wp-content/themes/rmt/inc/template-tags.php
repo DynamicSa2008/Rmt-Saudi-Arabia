@@ -221,7 +221,7 @@ function rmt_gallery( $limit = 0 ) {
 function rmt_client_card( $c ) {
 	$inner = $c['logo']
 		? rmt_img( $c['logo'], rmt_t( 'شعار ' ) . $c['name'], 'c-logo', false, '200px' )
-		: '<span class="c-mono" aria-hidden="true">' . esc_html( mb_substr( preg_replace( '/^(شركة|فندق|مجموعة|أمانة منطقة|مجمعات|مستشفيات|بنك|Riyadh|Dammam|Al|The)\s+/u', '', $c['name'] ), 0, 1 ) ) . '</span>';
+		: '<span class="c-mono" aria-hidden="true">' . esc_html( mb_strtoupper( mb_substr( preg_replace( array( '/^(شركة|فندق|مجموعة|أمانة منطقة|مجمعات|مستشفيات|بنك|The|Al)\s+/u', '/^ال(?=\S{2,})/u', '/^Al[ -]/u' ), '', $c['name'] ), 0, 1 ) ) ) . '</span>';
 	$tag   = $c['url'] ? 'a' : 'div';
 	$href  = $c['url'] ? ' href="' . esc_url( $c['url'] ) . '" target="_blank" rel="noopener nofollow"' : '';
 	printf(

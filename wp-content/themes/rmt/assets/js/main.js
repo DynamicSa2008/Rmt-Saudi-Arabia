@@ -90,10 +90,20 @@
 				b.classList.toggle('is-active', on);
 				b.setAttribute('aria-selected', on ? 'true' : 'false');
 			});
+			var flip = $('[data-flip]', scope), first = new Map();
+			if (flip && !reduce) $$('[data-type]', flip).forEach(function (it) { if (!it.classList.contains('is-hidden')) first.set(it, it.getBoundingClientRect()); });
 			$$('[data-type]', scope).forEach(function (it) {
 				var show = f === 'all' || it.getAttribute('data-type') === f;
 				it.classList.toggle('is-hidden', !show);
 				if (show) it.classList.add('in');
+			});
+			/* FLIP: slide kept cards to their new place, pop new ones in */
+			if (flip && !reduce) $$('[data-type]', flip).forEach(function (it) {
+				if (it.classList.contains('is-hidden')) return;
+				var a = first.get(it), b = it.getBoundingClientRect();
+				var kf = a ? [{ transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px)' }, { transform: 'none' }]
+					: [{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }];
+				it.animate(kf, { duration: 450, easing: 'cubic-bezier(.2,.7,.2,1)' });
 			});
 		});
 	});
@@ -177,7 +187,7 @@
 		form.addEventListener('submit', function (e) {
 			var bad = null;
 			$$('[required]', form).forEach(function (inp) {
-				var wrap = inp.closest('.fld'), valid = inp.value.trim() !== '' && (!inp.pattern || new RegExp('^(?:' + inp.pattern + ')$').test(inp.value.trim()));
+				var wrap = inp.closest('.fld, .consent'), valid = inp.type === 'checkbox' ? inp.checked : (inp.value.trim() !== '' && (!inp.pattern || new RegExp('^(?:' + inp.pattern + ')$').test(inp.value.trim())));
 				if (wrap) wrap.classList.toggle('invalid', !valid);
 				if (!valid && !bad) bad = inp;
 			});
@@ -191,17 +201,17 @@
 
 	/* ---------- Page-transition loader ---------- */
 	(function () {
-		var start = performance.now(), MIN = 650;
+		var start = performance.now(), MIN = 1500;
 		function done() {
 			if (!root.classList.contains('is-loading')) return;
 			var wait = Math.max(0, MIN - (performance.now() - start));
 			setTimeout(function () {
 				root.classList.add('is-loaded');
-				setTimeout(function () { root.classList.remove('is-loading', 'is-loaded'); }, 800);
+				setTimeout(function () { root.classList.remove('is-loading', 'is-loaded'); }, 1500);
 			}, wait);
 		}
 		if (d.readyState === 'complete') done(); else window.addEventListener('load', done);
-		setTimeout(done, 1800); /* never hold the page longer than this */
+		setTimeout(done, 2600); /* never hold the page longer than this */
 
 		/* Back/forward cache: never show a stuck curtain */
 		window.addEventListener('pageshow', function (e) { if (e.persisted) root.classList.remove('is-leaving', 'is-loading', 'is-loaded'); });
@@ -220,7 +230,7 @@
 			e.preventDefault();
 			try { sessionStorage.setItem('rmt-nav', '1'); } catch (err) {}
 			root.classList.add('is-leaving');
-			setTimeout(function () { location.href = url.href; }, 420);
+			setTimeout(function () { location.href = url.href; }, 750);
 		});
 	})();
 
@@ -290,6 +300,18 @@
 			window.addEventListener('resize', onDesc);
 			onDesc();
 		}
+	}
+
+	/* ---------- Client cards: tilt + light that follows the pointer ---------- */
+	if (!reduce && window.matchMedia('(hover: hover)').matches) {
+		$$('[data-tilt]').forEach(function (card) {
+			card.addEventListener('pointermove', function (e) {
+				var r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+				card.style.transform = 'perspective(700px) rotateX(' + ((.5 - y) * 10).toFixed(2) + 'deg) rotateY(' + ((x - .5) * 12).toFixed(2) + 'deg) translateY(-4px)';
+				card.style.setProperty('--mx', (x * 100) + '%'); card.style.setProperty('--my', (y * 100) + '%');
+			});
+			card.addEventListener('pointerleave', function () { card.style.transform = ''; });
+		});
 	}
 
 	/* ---------- Before / After gallery ---------- */

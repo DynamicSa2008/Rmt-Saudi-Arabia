@@ -15,6 +15,8 @@ require $rmt_inc . 'options.php';
 require $rmt_inc . 'setup.php';
 require $rmt_inc . 'template-tags.php';
 require $rmt_inc . 'seo.php';
+require $rmt_inc . 'mail.php';
+require $rmt_inc . 'legal.php';
 require $rmt_inc . 'leads.php';
 if ( is_admin() ) {
 	require $rmt_inc . 'admin.php';

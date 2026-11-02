@@ -56,6 +56,7 @@ $g = rmt_get( 'general' );
 			<?php rmt_nav( 'nav' ); ?>
 			<div class="nav-mobile-extra">
 				<?php rmt_cta_buttons(); ?>
+				<a class="nav-lang" href="<?php echo esc_url( rmt_alt_url( rmt_is_en() ? 'ar' : 'en' ) ); ?>" hreflang="<?php echo rmt_is_en() ? 'ar' : 'en'; ?>" lang="<?php echo rmt_is_en() ? 'ar' : 'en'; ?>"><?php echo rmt_is_en() ? 'التصفح بالعربية' : 'Browse in English'; ?></a>
 				<div class="nav-vision"><?php rmt_vision_badge( 'menu' ); ?></div>
 			</div>
 		</nav>

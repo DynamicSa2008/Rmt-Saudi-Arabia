@@ -98,7 +98,10 @@ $dev_host = preg_replace( '#^https?://(www\.)?#', '', untrailingslashit( $f['dev
 		</div>
 
 		<div class="ft-bottom">
-			<p class="ft-copy">© <?php echo esc_html( wp_date( 'Y' ) ); ?> — <?php echo esc_html( $f['copyright'] ); ?></p>
+			<div class="ft-copy-wrap">
+				<p class="ft-copy">© <?php echo esc_html( wp_date( 'Y' ) ); ?> — <?php echo esc_html( $f['copyright'] ); ?></p>
+				<?php rmt_legal_links(); ?>
+			</div>
 			<?php
 			$has = false;
 			foreach ( $social as $k => $s ) {
