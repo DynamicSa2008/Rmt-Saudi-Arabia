@@ -441,6 +441,7 @@ function rmt_render_guide_page() {
 				<li><span class="rmt-num"><?php echo (int) $n + 1; ?></span><span class="dashicons <?php echo esc_attr( $s[0] ); ?>"></span><h3><?php echo esc_html( $s[1] ); ?></h3><p><?php echo esc_html( $s[2] ); ?></p></li>
 			<?php endforeach; ?>
 		</ol>
+		<?php rmt_render_health(); ?>
 		<div class="rmt-card"><h3>نصائح مهمة</h3>
 			<ul class="ul-disc">
 				<li>الصور: ارفعها بعرض لا يزيد عن 1600px، ووردبرس يولّد أحجامًا أصغر تلقائيًا.</li>

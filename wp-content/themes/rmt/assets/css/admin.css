@@ -118,3 +118,5 @@
 .rmt-wrap [name$="_en]"] { direction: ltr; text-align: left; }
 .rmt-mail-test code { background: #f6f8fb; padding: 2px 6px; border-radius: 4px; }
 .rmt-mail-err { color: #b32d2e; margin-top: 10px; }
+.rmt-health td, .rmt-health th { font-size: 13px; vertical-align: middle; }
+.rmt-health td a { word-break: break-all; }
