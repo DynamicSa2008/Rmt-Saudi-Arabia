@@ -138,6 +138,27 @@ return array(
 	'روابط الموقع'                 => 'Site links',
 	'الصفحات'                      => 'Pages',
 
+	// Vision 2030 & before/after.
+	'رؤية المملكة 2030'             => 'Saudi Vision 2030',
+	'رؤية المملكة'                  => 'Saudi Vision',
+	'فخورون بالمساهمة في تحقيق مستهدفات رؤية المملكة 2030 بخدمات تحافظ على جودة المباني واستدامتها.' => 'Proud to contribute to Saudi Vision 2030 with services that protect the quality and sustainability of buildings.',
+	'قبل / بعد'                    => 'Before / After',
+	'قبل'                          => 'Before',
+	'بعد'                          => 'After',
+	'قبل التنظيف'                  => 'before cleaning',
+	'بعد التنظيف'                  => 'after cleaning',
+	'اسحب للمقارنة بين قبل وبعد'     => 'Drag to compare before and after',
+	'عرض الحالة'                   => 'View state',
+	'اسحب على الصورة'               => 'Drag across the photo',
+	'الأدوار'                      => 'Floors',
+	'م² زجاج وواجهات'               => 'm² of glass & façade',
+	'مدة التنفيذ'                  => 'Duration',
+	'فنيين'                        => 'Technicians',
+	'المشروع السابق'                => 'Previous project',
+	'المشروع التالي'                => 'Next project',
+	'أريد نتيجة مثلها'              => 'I want this result',
+	'المشاريع'                     => 'Projects',
+
 	// 404 & blog.
 	'الصفحة غير موجودة'             => 'Page not found',
 	'ربما تم نقل الصفحة أو أن الرابط غير صحيح. يمكنك العودة للرئيسية أو التواصل معنا مباشرة.' => 'The page may have moved or the link is incorrect. You can go back home or contact us directly.',

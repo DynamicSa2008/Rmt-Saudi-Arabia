@@ -43,6 +43,8 @@ $clients  = (array) rmt_get( 'clients', 'items' );
 
 <?php get_template_part( 'template-parts/service-tower' ); ?>
 
+<?php get_template_part( 'template-parts/before-after' ); ?>
+
 <section class="section why sand">
 	<div class="container why-grid">
 		<div class="why-media reveal">

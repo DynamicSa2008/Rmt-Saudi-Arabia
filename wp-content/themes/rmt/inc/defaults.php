@@ -55,6 +55,9 @@ function rmt_defaults() {
 			'social_linkedin' => '',
 			'social_youtube'  => '',
 			'show_float'      => '1',
+			'show_vision'     => '1',
+			'vision_logo'     => '',
+			'vision_logo_light' => '',
 		),
 
 		/* ---------------- Home ---------------- */
@@ -149,6 +152,13 @@ function rmt_defaults() {
 		'projects' => array(
 			'title' => 'سابقة الأعمال',
 			'intro' => 'نماذج من مشاريع تنظيف الواجهات والأبراج التي نفذتها فرقنا في الرياض.',
+			'ba_title' => 'الفرق واضح من أول نظرة',
+			'ba_text'  => 'مشاريع حقيقية قبل وبعد تنفيذ فرقنا. اسحب على الصورة أو اضغط «بعد» لترى النتيجة.',
+			'ba'       => array(
+				array( 'title' => 'تنظيف واجهات فندق', 'service' => 'تنظيف واجهات زجاجية', 'place' => 'الرياض', 'duration' => '', 'floors' => '', 'area' => '', 'team' => '', 'before' => '', 'after' => $media . 'project-photo-1.jpg' ),
+				array( 'title' => 'برج زجاجي تجاري', 'service' => 'تنظيف بالحبال', 'place' => 'الرياض', 'duration' => '', 'floors' => '', 'area' => '', 'team' => '', 'before' => '', 'after' => $media . 'project-photo-2.jpg' ),
+				array( 'title' => 'برج إداري', 'service' => 'تنظيف وصيانة زجاج', 'place' => 'الرياض', 'duration' => '', 'floors' => '', 'area' => '', 'team' => '', 'before' => '', 'after' => $media . 'project-video-3.jpg' ),
+			),
 			'items' => array(
 				array( 'type' => 'video', 'src' => $media . 'project-video-1.mp4', 'poster' => $media . 'project-video-1.jpg', 'title' => 'تنظيف واجهة زجاجية بالحبال', 'place' => 'الرياض' ),
 				array( 'type' => 'video', 'src' => $media . 'project-video-2.mp4', 'poster' => $media . 'project-video-2.jpg', 'title' => 'تنظيف برج تجاري', 'place' => 'الرياض' ),

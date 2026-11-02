@@ -44,6 +44,12 @@ $dev_host = preg_replace( '#^https?://(www\.)?#', '', untrailingslashit( $f['dev
 					<small lang="<?php echo rmt_is_en() ? 'ar' : 'en'; ?>" dir="<?php echo rmt_is_en() ? 'rtl' : 'ltr'; ?>"><?php echo esc_html( rmt_is_en() ? 'مؤسسة رفال المدينة للمقاولات' : $g['name_en'] ); ?></small>
 				</span>
 			</a>
+			<?php if ( '1' === rmt_get( 'general', 'show_vision' ) ) : ?>
+				<div class="ft-vision">
+					<?php rmt_vision_badge( 'footer' ); ?>
+					<p><?php rmt_te( 'فخورون بالمساهمة في تحقيق مستهدفات رؤية المملكة 2030 بخدمات تحافظ على جودة المباني واستدامتها.' ); ?></p>
+				</div>
+			<?php endif; ?>
 			<div class="ft-call">
 				<span class="ft-label"><?php rmt_te( 'للاستفسار وطلب المعاينة' ); ?></span>
 				<a class="ft-phone" href="tel:<?php echo esc_attr( rmt_tel() ); ?>" dir="ltr" data-track="call"><?php echo esc_html( rmt_phone_display() ); ?></a>

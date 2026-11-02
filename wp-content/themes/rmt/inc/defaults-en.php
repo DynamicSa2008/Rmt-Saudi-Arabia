@@ -113,6 +113,13 @@ function rmt_defaults_en() {
 		'projects' => array(
 			'title' => 'Our Work',
 			'intro' => 'A selection of façade and tower cleaning projects completed by our crews in Riyadh.',
+			'ba_title' => 'See the Difference',
+			'ba_text'  => 'Real projects before and after our crews. Drag across the photo or tap “After” to see the result.',
+			'ba'       => array(
+				array( 'title' => 'Hotel façade cleaning', 'service' => 'Glass façade cleaning', 'place' => 'Riyadh' ),
+				array( 'title' => 'Commercial glass tower', 'service' => 'Rope-access cleaning', 'place' => 'Riyadh' ),
+				array( 'title' => 'Office tower', 'service' => 'Cleaning & glass maintenance', 'place' => 'Riyadh' ),
+			),
 			'items' => array(
 				array( 'title' => 'Rope-access glass façade cleaning', 'place' => 'Riyadh' ),
 				array( 'title' => 'Commercial tower cleaning', 'place' => 'Riyadh' ),

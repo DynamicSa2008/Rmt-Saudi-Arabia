@@ -233,3 +233,27 @@ function rmt_client_card( $c ) {
 		$inner // phpcs:ignore
 	);
 }
+
+/**
+ * Saudi Vision 2030 badge. Uses the official logo uploaded from the panel;
+ * until then shows a text badge (the official mark is never redrawn).
+ *
+ * @param string $context header|footer.
+ */
+function rmt_vision_badge( $context = 'header' ) {
+	if ( '1' !== rmt_get( 'general', 'show_vision' ) ) {
+		return;
+	}
+	$logo  = rmt_get( 'general', 'vision_logo' );
+	$light = rmt_get( 'general', 'vision_logo_light' );
+	$src   = ( 'footer' === $context && $light ) ? $light : $logo;
+	$label = rmt_t( 'رؤية المملكة 2030' );
+	$cls   = 'v2030 v2030-' . $context . ( $src ? ' has-logo' : '' ) . ( 'footer' === $context && $logo && ! $light ? ' on-white' : '' );
+	echo '<a class="' . esc_attr( $cls ) . '" href="https://www.vision2030.gov.sa/" target="_blank" rel="noopener" title="' . esc_attr( $label ) . '">';
+	if ( $src ) {
+		echo '<img src="' . esc_url( $src ) . '" alt="' . esc_attr( $label ) . '" height="44" loading="' . ( 'header' === $context ? 'eager' : 'lazy' ) . '" decoding="async">';
+	} else {
+		echo '<span class="v2030-txt"><small>' . esc_html( rmt_t( 'رؤية المملكة' ) ) . '</small><b>2030</b></span>';
+	}
+	echo '</a>';
+}
