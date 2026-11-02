@@ -13,15 +13,11 @@ defined( 'ABSPATH' ) || exit;
 const RMT_OPTION = 'rmt_options';
 
 /**
- * Get merged options (saved values over defaults). Cached per request.
+ * Raw merged options (saved values over defaults), Arabic + *_en keys.
  *
  * @return array
  */
-function rmt_options() {
-	static $cache = null;
-	if ( null !== $cache && ! doing_action( 'update_option_' . RMT_OPTION ) ) {
-		return $cache;
-	}
+function rmt_raw_options() {
 	$defaults = rmt_defaults();
 	$saved    = get_option( RMT_OPTION, array() );
 	$saved    = is_array( $saved ) ? $saved : array();
@@ -30,8 +26,26 @@ function rmt_options() {
 			$defaults[ $section ] = array_merge( $values, $saved[ $section ] );
 		}
 	}
-	$cache = $defaults;
-	return $cache;
+	return $defaults;
+}
+
+/**
+ * Options for the current language. Cached per request.
+ *
+ * @return array
+ */
+function rmt_options() {
+	static $cache = array();
+	$lang = function_exists( 'rmt_lang' ) ? rmt_lang() : 'ar';
+	if ( isset( $cache[ $lang ] ) ) {
+		return $cache[ $lang ];
+	}
+	$o = rmt_raw_options();
+	if ( 'en' === $lang ) {
+		$o = rmt_localize_options( $o );
+	}
+	$cache[ $lang ] = $o;
+	return $o;
 }
 
 /**
@@ -90,13 +104,21 @@ function rmt_phone_display() {
 	return rmt_get( 'general', 'phone' );
 }
 
-/** URL of one of the 5 core pages by key. */
-function rmt_page_url( $key ) {
+/**
+ * URL of one of the 5 core pages by key, in the current (or given) language.
+ *
+ * @param string      $key  home|about|services|clients|contact.
+ * @param string|null $lang ar|en.
+ * @return string
+ */
+function rmt_page_url( $key, $lang = null ) {
+	$lang   = $lang ? $lang : rmt_lang();
+	$prefix = 'en' === $lang ? 'en/' : '';
 	if ( 'home' === $key ) {
-		return home_url( '/' );
+		return 'en' === $lang ? home_url( '/en/' ) : home_url( '/' );
 	}
-	$page = get_page_by_path( $key );
-	return $page ? get_permalink( $page ) : home_url( '/' . $key . '/' );
+	$page = get_page_by_path( $prefix . $key );
+	return $page ? get_permalink( $page ) : home_url( '/' . $prefix . $key . '/' );
 }
 
 /**
@@ -143,7 +165,8 @@ function rmt_panel_schema() {
 					array( 'general.region', 'text', 'المنطقة' ),
 					array( 'general.postal_code', 'text', 'الرمز البريدي' ),
 					array( 'general.po_box', 'text', 'صندوق البريد' ),
-					array( 'general.map_url', 'url', 'رابط الموقع على خرائط Google' ),
+					array( 'general.map_url', 'url', 'رابط الموقع على خرائط Google', 'يُستخدم لزر "فتح في خرائط Google".' ),
+					array( 'general.map_embed', 'map_embed', 'كود تضمين الخريطة (الأدق)', 'من خرائط Google افتح موقعكم ← مشاركة ← تضمين خريطة ← نسخ HTML، ثم الصقه هنا. يتم استخراج الإحداثيات تلقائيًا.' ),
 					array( 'general.map_embed_query', 'text', 'نص البحث للخريطة المضمّنة', 'اسم المكان أو الإحداثيات كما تُكتب في خرائط Google.' ),
 					array( 'general.lat', 'text', 'خط العرض (Latitude)', 'من خرائط Google: اضغط مطولًا على الموقع وانسخ الرقم الأول. يحسّن الظهور في البحث المحلي.' ),
 					array( 'general.lng', 'text', 'خط الطول (Longitude)' ),
@@ -386,6 +409,12 @@ function rmt_sanitize_value( $type, $value, $opts = array() ) {
 			return esc_url_raw( trim( (string) $value ) );
 		case 'email':
 			return sanitize_email( $value );
+		case 'map_embed':
+			$value = html_entity_decode( (string) $value );
+			if ( preg_match( '#https://www\.google\.com/maps/embed\?[^"\'\s<>]+#', $value, $m ) ) {
+				return esc_url_raw( $m[0] );
+			}
+			return '';
 		case 'toggle':
 			return ! empty( $value ) ? '1' : '0';
 		case 'select':
@@ -398,10 +427,15 @@ function rmt_sanitize_value( $type, $value, $opts = array() ) {
 /**
  * Sanitize the whole panel submission against the schema.
  *
- * @param array $input Posted data (section => key => value).
+ * Repeater rows always carry both languages (the inactive language travels in
+ * hidden inputs), so ordering/adding/deleting stays in sync between AR and EN.
+ * Scalar fields are only updated when posted.
+ *
+ * @param array  $input Posted data (section => key => value).
+ * @param string $lang  Panel language being edited: ar|en.
  * @return array
  */
-function rmt_sanitize_options( $input ) {
+function rmt_sanitize_options( $input, $lang = 'ar' ) {
 	$input = is_array( $input ) ? $input : array();
 	$out   = get_option( RMT_OPTION, array() );
 	$out   = is_array( $out ) ? $out : array();
@@ -411,11 +445,14 @@ function rmt_sanitize_options( $input ) {
 			foreach ( $group['fields'] as $f ) {
 				list( $section, $key ) = explode( '.', $f[0] );
 				if ( ! isset( $input[ $section ] ) ) {
-					continue; // Tab not submitted.
+					continue;
 				}
 				$type = $f[1];
 				if ( 'repeater' === $type ) {
-					$rows  = isset( $input[ $section ][ $key ] ) && is_array( $input[ $section ][ $key ] ) ? $input[ $section ][ $key ] : array();
+					if ( ! isset( $input[ $section ][ $key ] ) ) {
+						continue;
+					}
+					$rows  = is_array( $input[ $section ][ $key ] ) ? $input[ $section ][ $key ] : array();
 					$clean = array();
 					foreach ( $rows as $row ) {
 						if ( ! is_array( $row ) ) {
@@ -424,10 +461,17 @@ function rmt_sanitize_options( $input ) {
 						$r     = array();
 						$empty = true;
 						foreach ( $f[4] as $sub ) {
-							$v = isset( $row[ $sub[0] ] ) ? $row[ $sub[0] ] : '';
-							$r[ $sub[0] ] = rmt_sanitize_value( $sub[1], $v, isset( $sub[4] ) ? $sub[4] : array() );
-							if ( '' !== $r[ $sub[0] ] && ! in_array( $sub[1], array( 'select', 'toggle' ), true ) ) {
-								$empty = false;
+							$opts  = isset( $sub[4] ) ? $sub[4] : array();
+							$names = array( $sub[0] );
+							if ( rmt_is_i18n( $sub[1], 'sub.' . $sub[0] ) ) {
+								$names[] = $sub[0] . '_en';
+							}
+							foreach ( $names as $n ) {
+								$v       = isset( $row[ $n ] ) ? $row[ $n ] : '';
+								$r[ $n ] = rmt_sanitize_value( $sub[1], $v, $opts );
+								if ( '' !== $r[ $n ] && ! in_array( $sub[1], array( 'select', 'toggle' ), true ) ) {
+									$empty = false;
+								}
 							}
 						}
 						if ( ! $empty ) {
@@ -436,11 +480,30 @@ function rmt_sanitize_options( $input ) {
 					}
 					$out[ $section ][ $key ] = $clean;
 				} else {
-					$v = isset( $input[ $section ][ $key ] ) ? $input[ $section ][ $key ] : '';
-					$out[ $section ][ $key ] = rmt_sanitize_value( $type, $v, isset( $f[4] ) ? $f[4] : array() );
+					$store = ( 'en' === $lang && rmt_is_i18n( $type, $f[0] ) ) ? $key . '_en' : $key;
+					if ( ! array_key_exists( $store, $input[ $section ] ) ) {
+						continue;
+					}
+					$out[ $section ][ $store ] = rmt_sanitize_value( $type, $input[ $section ][ $store ], isset( $f[4] ) ? $f[4] : array() );
 				}
 			}
 		}
 	}
+	// Pull exact coordinates out of a Google embed URL (…!2d<lng>!3d<lat>…).
+	if ( ! empty( $out['general']['map_embed'] ) && preg_match( '/!2d(-?[0-9.]+)!3d(-?[0-9.]+)/', $out['general']['map_embed'], $m ) ) {
+		$out['general']['lng'] = $m[1];
+		$out['general']['lat'] = $m[2];
+	}
 	return $out;
+}
+
+/** Best available Google Maps embed URL for the contact page. */
+function rmt_map_embed_url() {
+	$g = rmt_get( 'general' );
+	if ( ! empty( $g['map_embed'] ) ) {
+		$u = $g['map_embed'];
+		return rmt_is_en() ? preg_replace( '/!1sar!2s/', '!1sen!2s', $u ) : $u;
+	}
+	$q = ( $g['lat'] && $g['lng'] ) ? $g['lat'] . ',' . $g['lng'] : $g['map_embed_query'];
+	return 'https://maps.google.com/maps?q=' . rawurlencode( $q ) . '&hl=' . ( rmt_is_en() ? 'en' : 'ar' ) . '&z=16&output=embed';
 }

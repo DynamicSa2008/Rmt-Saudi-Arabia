@@ -9,6 +9,8 @@ defined( 'ABSPATH' ) || exit;
 
 $rmt_inc = get_template_directory() . '/inc/';
 require $rmt_inc . 'defaults.php';
+require $rmt_inc . 'defaults-en.php';
+require $rmt_inc . 'i18n.php';
 require $rmt_inc . 'options.php';
 require $rmt_inc . 'setup.php';
 require $rmt_inc . 'template-tags.php';

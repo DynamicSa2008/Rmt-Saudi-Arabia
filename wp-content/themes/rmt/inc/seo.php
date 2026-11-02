@@ -1,9 +1,9 @@
 <?php
 /**
- * Built-in SEO: titles, meta descriptions, canonical, robots, Open Graph,
- * Twitter cards, verification tags, analytics, JSON-LD (LocalBusiness,
- * WebSite, WebPage, BreadcrumbList, Service catalog, FAQPage, ItemList,
- * VideoObject), sitemap & robots.txt tuning.
+ * Built-in SEO (bilingual): titles, meta descriptions, canonical, hreflang,
+ * robots, Open Graph, Twitter cards, verification tags, analytics, JSON-LD
+ * (LocalBusiness, WebSite, WebPage, BreadcrumbList, OfferCatalog, ItemList,
+ * FAQPage, VideoObject), sitemap & robots.txt tuning.
  *
  * Automatically disabled when Yoast SEO / Rank Math / AIOSEO / SEOPress is active.
  *
@@ -33,7 +33,7 @@ function rmt_seo_title() {
 		return rmt_get( 'seo', $k . '_title' );
 	}
 	if ( is_404() ) {
-		return 'الصفحة غير موجودة | ' . rmt_get( 'general', 'short_name' );
+		return rmt_t( 'الصفحة غير موجودة' ) . ' | ' . rmt_get( 'general', 'short_name' );
 	}
 	return wp_get_document_title();
 }
@@ -51,10 +51,11 @@ function rmt_seo_desc() {
 	return rmt_get( 'seo', 'home_desc' );
 }
 
-/** Canonical URL. */
+/** Canonical URL (never carries query strings such as ?service= or ?sent=). */
 function rmt_canonical() {
-	if ( is_front_page() ) {
-		return home_url( '/' );
+	$k = rmt_seo_key();
+	if ( $k ) {
+		return rmt_page_url( $k );
 	}
 	if ( is_singular() ) {
 		return get_permalink();
@@ -62,11 +63,29 @@ function rmt_canonical() {
 	return '';
 }
 
+/** Absolute dimensions of an image URL (theme asset or media library). */
+function rmt_image_size( $url ) {
+	$theme_uri = get_template_directory_uri();
+	if ( 0 === strpos( $url, $theme_uri ) ) {
+		$file = get_template_directory() . substr( $url, strlen( $theme_uri ) );
+		$s    = file_exists( $file ) ? @getimagesize( $file ) : false; // phpcs:ignore
+		return $s ? array( $s[0], $s[1], $s['mime'] ) : array();
+	}
+	$id = attachment_url_to_postid( $url );
+	if ( $id ) {
+		$m = wp_get_attachment_metadata( $id );
+		if ( ! empty( $m['width'] ) ) {
+			return array( $m['width'], $m['height'], get_post_mime_type( $id ) );
+		}
+	}
+	return array();
+}
+
 /** Override <title>. */
 add_filter(
 	'pre_get_document_title',
 	function ( $t ) {
-		return rmt_seo_on() && rmt_seo_key() ? rmt_seo_title() : $t;
+		return rmt_seo_on() && ( rmt_seo_key() || is_404() ) ? rmt_seo_title() : $t;
 	}
 );
 add_filter( 'document_title_separator', function () { return '|'; } );
@@ -78,7 +97,9 @@ add_filter(
 		if ( ! rmt_seo_on() ) {
 			return $robots;
 		}
-		if ( '1' === rmt_get( 'seo', 'noindex_site' ) || is_404() || is_search() || is_attachment() || is_author() || is_date() ) {
+		// phpcs:ignore WordPress.Security.NonceVerification
+		$utility = isset( $_GET['sent'] ) || isset( $_GET['err'] );
+		if ( '1' === rmt_get( 'seo', 'noindex_site' ) || $utility || is_404() || is_search() || is_attachment() || is_author() || is_date() ) {
 			return array( 'noindex' => true, 'follow' => true );
 		}
 		$robots['index']             = true;
@@ -91,7 +112,14 @@ add_filter(
 );
 
 /** Core prints canonical for singular; we print our own instead. */
-remove_action( 'wp_head', 'rel_canonical' );
+add_action(
+	'wp',
+	function () {
+		if ( rmt_seo_on() ) {
+			remove_action( 'wp_head', 'rel_canonical' );
+		}
+	}
+);
 
 /** Main head output. */
 function rmt_seo_head() {
@@ -100,7 +128,7 @@ function rmt_seo_head() {
 	echo '<meta name="theme-color" content="#0b2545">' . "\n";
 	echo '<meta name="format-detection" content="telephone=no">' . "\n";
 
-	// Verification (also printed when an SEO plugin is active – harmless and useful).
+	// Verification (also printed when an SEO plugin is active).
 	foreach ( array( 'gsc' => 'google-site-verification', 'bing' => 'msvalidate.01', 'yandex' => 'yandex-verification' ) as $k => $n ) {
 		if ( rmt_get( 'seo', $k ) ) {
 			printf( '<meta name="%s" content="%s">' . "\n", esc_attr( $n ), esc_attr( rmt_get( 'seo', $k ) ) );
@@ -114,21 +142,23 @@ function rmt_seo_head() {
 	$title = rmt_seo_title();
 	$desc  = rmt_seo_desc();
 	$canon = rmt_canonical();
+	$key   = rmt_seo_key();
 	$img   = rmt_get( 'seo', 'og_image' );
-	if ( 'about' === rmt_seo_key() && rmt_get( 'about', 'image' ) ) {
+	if ( 'about' === $key && rmt_get( 'about', 'image' ) ) {
 		$img = rmt_get( 'about', 'image' );
 	}
 
 	if ( $desc ) {
 		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
 	}
-	if ( rmt_get( 'seo', 'keywords' ) && is_front_page() ) {
-		echo '<meta name="keywords" content="' . esc_attr( rmt_get( 'seo', 'keywords' ) ) . '">' . "\n";
-	}
 	if ( $canon ) {
 		echo '<link rel="canonical" href="' . esc_url( $canon ) . '">' . "\n";
-		echo '<link rel="alternate" hreflang="ar-SA" href="' . esc_url( $canon ) . '">' . "\n";
-		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url( $canon ) . '">' . "\n";
+	}
+	// hreflang pairs between the Arabic and English versions of the same page.
+	if ( $key ) {
+		echo '<link rel="alternate" hreflang="ar" href="' . esc_url( rmt_page_url( $key, 'ar' ) ) . '">' . "\n";
+		echo '<link rel="alternate" hreflang="en" href="' . esc_url( rmt_page_url( $key, 'en' ) ) . '">' . "\n";
+		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url( rmt_page_url( $key, 'ar' ) ) . '">' . "\n";
 	}
 	// Local SEO geo tags.
 	echo '<meta name="geo.region" content="SA-01">' . "\n";
@@ -139,16 +169,24 @@ function rmt_seo_head() {
 	}
 
 	// Open Graph.
+	$en = rmt_is_en();
 	$og = array(
-		'og:locale'      => 'ar_SA',
-		'og:type'        => is_front_page() ? 'website' : 'article',
-		'og:site_name'   => $g['company_name'],
-		'og:title'       => $title,
-		'og:description' => $desc,
-		'og:url'         => $canon ? $canon : home_url( add_query_arg( array() ) ),
-		'og:image'       => $img,
-		'og:image:alt'   => $title,
+		'og:locale'           => $en ? 'en_US' : 'ar_SA',
+		'og:locale:alternate' => $en ? 'ar_SA' : 'en_US',
+		'og:type'             => 'home' === $key ? 'website' : 'article',
+		'og:site_name'        => $g['company_name'],
+		'og:title'            => $title,
+		'og:description'      => $desc,
+		'og:url'              => $canon ? $canon : home_url( '/' ),
+		'og:image'            => $img,
+		'og:image:alt'        => $title,
 	);
+	$dim = $img ? rmt_image_size( $img ) : array();
+	if ( $dim ) {
+		$og['og:image:width']  = $dim[0];
+		$og['og:image:height'] = $dim[1];
+		$og['og:image:type']   = $dim[2];
+	}
 	foreach ( $og as $p => $c ) {
 		if ( $c ) {
 			printf( '<meta property="%s" content="%s">' . "\n", esc_attr( $p ), esc_attr( $c ) );
@@ -159,6 +197,7 @@ function rmt_seo_head() {
 	printf( '<meta name="twitter:description" content="%s">' . "\n", esc_attr( $desc ) );
 	if ( $img ) {
 		printf( '<meta name="twitter:image" content="%s">' . "\n", esc_url( $img ) );
+		printf( '<meta name="twitter:image:alt" content="%s">' . "\n", esc_attr( $title ) );
 	}
 	if ( $g['social_x'] ) {
 		$handle = '@' . trim( wp_parse_url( $g['social_x'], PHP_URL_PATH ), '/' );
@@ -188,18 +227,29 @@ function rmt_print_schema() {
 	$home  = home_url( '/' );
 	$orgid = $home . '#organization';
 	$key   = rmt_seo_key();
+	$lang  = rmt_is_en() ? 'en' : 'ar';
+	$lhome = rmt_page_url( 'home' );
 
 	$same = array_values( array_filter( array( $g['social_x'], $g['social_instagram'], $g['social_snapchat'], $g['social_tiktok'], $g['social_linkedin'], $g['social_youtube'], $g['map_url'] ) ) );
+
+	$images = array_values(
+		array_unique(
+			array_filter(
+				array( rmt_get( 'seo', 'og_image' ), rmt_get( 'about', 'image' ), rmt_get( 'home', 'hero_poster' ) )
+			)
+		)
+	);
 
 	$business = array(
 		'@type'                     => array( 'LocalBusiness', 'ProfessionalService' ),
 		'@id'                       => $orgid,
 		'name'                      => $g['company_name'],
-		'alternateName'             => array( $g['short_name'], $g['name_en'], 'RMT' ),
+		'alternateName'             => array_values( array_unique( array( $g['short_name'], $g['name_en'], 'RMT' ) ) ),
 		'description'               => rmt_get( 'seo', 'home_desc' ),
-		'url'                       => $home,
+		'slogan'                    => $g['tagline'],
+		'url'                       => $lhome,
 		'logo'                      => array( '@type' => 'ImageObject', 'url' => rmt_logo_url(), 'width' => 600, 'height' => 600 ),
-		'image'                     => rmt_get( 'seo', 'og_image' ),
+		'image'                     => $images,
 		'telephone'                 => rmt_tel(),
 		'email'                     => $g['email_primary'],
 		'foundingDate'              => $g['founded'],
@@ -214,16 +264,17 @@ function rmt_print_schema() {
 			'addressCountry'  => 'SA',
 		),
 		'areaServed'                => array(
-			array( '@type' => 'City', 'name' => 'الرياض' ),
-			array( '@type' => 'Country', 'name' => 'المملكة العربية السعودية' ),
-			array( '@type' => 'Country', 'name' => 'البحرين' ),
+			array( '@type' => 'City', 'name' => rmt_t( 'الرياض' ) ),
+			array( '@type' => 'Country', 'name' => rmt_t( 'المملكة العربية السعودية' ) ),
+			array( '@type' => 'Country', 'name' => rmt_t( 'البحرين' ) ),
 		),
 		'contactPoint'              => array(
 			array(
 				'@type'             => 'ContactPoint',
 				'telephone'         => rmt_tel(),
+				'email'             => $g['email_primary'],
 				'contactType'       => 'customer service',
-				'areaServed'        => 'SA',
+				'areaServed'        => array( 'SA', 'BH' ),
 				'availableLanguage' => array( 'Arabic', 'English' ),
 			),
 		),
@@ -233,15 +284,15 @@ function rmt_print_schema() {
 			'opens'     => '08:00',
 			'closes'    => '18:00',
 		),
-		'knowsAbout'                => array_map( 'trim', explode( ',', rmt_get( 'seo', 'keywords' ) ) ),
+		'knowsAbout'                => array_values( array_filter( array_map( 'trim', explode( ',', rmt_get( 'seo', 'keywords' ) ) ) ) ),
 	);
 	if ( $g['landline'] ) {
 		$business['faxNumber'] = $g['landline'];
 	}
 	if ( $g['lat'] && $g['lng'] ) {
-		$business['geo']    = array( '@type' => 'GeoCoordinates', 'latitude' => (float) $g['lat'], 'longitude' => (float) $g['lng'] );
-		$business['hasMap'] = $g['map_url'];
-	} elseif ( $g['map_url'] ) {
+		$business['geo'] = array( '@type' => 'GeoCoordinates', 'latitude' => (float) $g['lat'], 'longitude' => (float) $g['lng'] );
+	}
+	if ( $g['map_url'] ) {
 		$business['hasMap'] = $g['map_url'];
 	}
 	if ( $same ) {
@@ -250,51 +301,57 @@ function rmt_print_schema() {
 
 	// Service catalogue.
 	$offers = array();
-	foreach ( (array) rmt_get( 'services', 'items' ) as $s ) {
+	foreach ( (array) rmt_get( 'services', 'items' ) as $i => $s ) {
 		$offers[] = array(
 			'@type'       => 'Offer',
 			'itemOffered' => array(
 				'@type'       => 'Service',
 				'name'        => $s['title'],
 				'description' => $s['short'],
+				'url'         => rmt_page_url( 'services' ) . '#' . rmt_slug( $s['title'], $i ),
 				'provider'    => array( '@id' => $orgid ),
 				'areaServed'  => 'SA',
 			),
 		);
 	}
-	$business['hasOfferCatalog'] = array( '@type' => 'OfferCatalog', 'name' => 'خدمات ' . $g['short_name'], 'itemListElement' => $offers );
+	$business['hasOfferCatalog'] = array( '@type' => 'OfferCatalog', 'name' => rmt_t( 'خدماتنا' ), 'itemListElement' => $offers );
 
 	$graph   = array( $business );
 	$graph[] = array(
-		'@type'       => 'WebSite',
-		'@id'         => $home . '#website',
-		'url'         => $home,
-		'name'        => $g['company_name'],
-		'inLanguage'  => 'ar-SA',
-		'publisher'   => array( '@id' => $orgid ),
+		'@type'      => 'WebSite',
+		'@id'        => $home . '#website',
+		'url'        => $home,
+		'name'       => $g['company_name'],
+		'inLanguage' => array( 'ar-SA', 'en' ),
+		'publisher'  => array( '@id' => $orgid ),
 	);
 
 	$url   = rmt_canonical();
 	$types = array( 'home' => 'WebPage', 'about' => 'AboutPage', 'contact' => 'ContactPage', 'services' => 'WebPage', 'clients' => 'CollectionPage' );
 	if ( $url ) {
-		$graph[] = array(
+		$page = array(
 			'@type'       => $key && isset( $types[ $key ] ) ? $types[ $key ] : 'WebPage',
 			'@id'         => $url . '#webpage',
 			'url'         => $url,
 			'name'        => rmt_seo_title(),
 			'description' => rmt_seo_desc(),
-			'inLanguage'  => 'ar-SA',
+			'inLanguage'  => 'en' === $lang ? 'en' : 'ar-SA',
 			'isPartOf'    => array( '@id' => $home . '#website' ),
 			'about'       => array( '@id' => $orgid ),
 		);
+		if ( $key && 'home' !== $key ) {
+			$page['breadcrumb'] = array( '@id' => $url . '#breadcrumb' );
+		}
+		$graph[] = $page;
 	}
 
 	if ( $key && 'home' !== $key ) {
 		$items   = rmt_nav_items();
 		$graph[] = array(
 			'@type'           => 'BreadcrumbList',
+			'@id'             => $url . '#breadcrumb',
 			'itemListElement' => array(
-				array( '@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $home ),
+				array( '@type' => 'ListItem', 'position' => 1, 'name' => $items['home'], 'item' => $lhome ),
 				array( '@type' => 'ListItem', 'position' => 2, 'name' => $items[ $key ], 'item' => $url ),
 			),
 		);
@@ -315,7 +372,7 @@ function rmt_print_schema() {
 		foreach ( (array) rmt_get( 'services', 'items' ) as $i => $s ) {
 			$list[] = array( '@type' => 'ListItem', 'position' => $i + 1, 'name' => $s['title'], 'url' => $url . '#' . rmt_slug( $s['title'], $i ) );
 		}
-		$graph[] = array( '@type' => 'ItemList', 'name' => 'خدماتنا', 'itemListElement' => $list );
+		$graph[] = array( '@type' => 'ItemList', 'name' => rmt_t( 'خدماتنا' ), 'itemListElement' => $list );
 	}
 
 	if ( 'clients' === $key ) {
@@ -323,7 +380,7 @@ function rmt_print_schema() {
 		foreach ( (array) rmt_get( 'clients', 'items' ) as $i => $c ) {
 			$list[] = array( '@type' => 'ListItem', 'position' => $i + 1, 'item' => array( '@type' => 'Organization', 'name' => $c['name'] ) );
 		}
-		$graph[] = array( '@type' => 'ItemList', 'name' => 'عملاؤنا', 'itemListElement' => $list );
+		$graph[] = array( '@type' => 'ItemList', 'name' => rmt_t( 'عملاؤنا' ), 'itemListElement' => $list );
 	}
 
 	// Portfolio videos (home + clients pages show the gallery).
@@ -337,6 +394,7 @@ function rmt_print_schema() {
 					'thumbnailUrl' => $p['poster'] ? $p['poster'] : rmt_get( 'seo', 'og_image' ),
 					'contentUrl'   => $p['src'],
 					'uploadDate'   => gmdate( 'c', (int) get_option( 'rmt_media_date', time() ) ),
+					'inLanguage'   => 'en' === $lang ? 'en' : 'ar',
 					'publisher'    => array( '@id' => $orgid ),
 				);
 			}
@@ -381,7 +439,21 @@ add_filter(
 		return $types;
 	}
 );
-/** Sitemap: lastmod + priority-ish ordering. */
+/** Sitemap: drop the duplicate Arabic "home" page (it is the front page "/"). */
+add_filter(
+	'wp_sitemaps_posts_query_args',
+	function ( $args, $post_type ) {
+		if ( 'page' === $post_type ) {
+			$home = get_page_by_path( 'home' );
+			if ( $home && (int) get_option( 'page_on_front' ) !== (int) $home->ID ) {
+				$args['post__not_in'] = array( $home->ID );
+			}
+		}
+		return $args;
+	},
+	10,
+	2
+);
 add_filter(
 	'wp_sitemaps_posts_entry',
 	function ( $entry, $post ) {
@@ -390,6 +462,15 @@ add_filter(
 	},
 	10,
 	2
+);
+/** Bump sitemap lastmod when panel content changes. */
+add_action(
+	'update_option_' . RMT_OPTION,
+	function () {
+		foreach ( get_pages( array( 'post_status' => 'publish' ) ) as $p ) {
+			wp_update_post( array( 'ID' => $p->ID ) );
+		}
+	}
 );
 
 /** robots.txt */
@@ -404,7 +485,9 @@ add_filter(
 		$out .= "Allow: /wp-admin/admin-ajax.php\n";
 		$out .= "Disallow: /?s=\n";
 		$out .= "Disallow: /search/\n";
-		$out .= "Disallow: /wp-login.php\n\n";
+		$out .= "Disallow: /wp-login.php\n";
+		$out .= "Disallow: /*?sent=\n";
+		$out .= "Disallow: /*?err=\n\n";
 		$out .= 'Sitemap: ' . home_url( '/wp-sitemap.xml' ) . "\n";
 		return $out;
 	},
@@ -420,7 +503,6 @@ add_action(
 			wp_safe_redirect( home_url( '/' ), 301 );
 			exit;
 		}
-		// The "home" page slug should not be reachable twice.
 		if ( is_page( 'home' ) && ! is_front_page() ) {
 			wp_safe_redirect( home_url( '/' ), 301 );
 			exit;

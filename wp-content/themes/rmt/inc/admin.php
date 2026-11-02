@@ -63,18 +63,19 @@ function rmt_save_panel() {
 		wp_die( 'غير مسموح.' );
 	}
 	check_admin_referer( 'rmt_save_panel' );
-	$tab = isset( $_POST['rmt_tab'] ) ? sanitize_key( wp_unslash( $_POST['rmt_tab'] ) ) : 'general';
+	$tab  = isset( $_POST['rmt_tab'] ) ? sanitize_key( wp_unslash( $_POST['rmt_tab'] ) ) : 'general';
+	$lang = isset( $_POST['rmt_lang'] ) && 'en' === $_POST['rmt_lang'] ? 'en' : 'ar';
 
 	if ( isset( $_POST['rmt_reset'] ) ) {
 		delete_option( RMT_OPTION );
 		$msg = 'reset';
 	} else {
 		$input = isset( $_POST['rmt'] ) && is_array( $_POST['rmt'] ) ? $_POST['rmt'] : array(); // phpcs:ignore -- sanitized below.
-		update_option( RMT_OPTION, rmt_sanitize_options( $input ), true );
+		update_option( RMT_OPTION, rmt_sanitize_options( $input, $lang ), true );
 		$msg = 'saved';
 	}
 	rmt_flush_page_cache();
-	wp_safe_redirect( admin_url( 'admin.php?page=rmt-panel&msg=' . $msg . '#' . $tab ) );
+	wp_safe_redirect( admin_url( 'admin.php?page=rmt-panel&lang=' . $lang . '&msg=' . $msg . '#' . $tab ) );
 	exit;
 }
 add_action( 'admin_post_rmt_save_panel', 'rmt_save_panel' );
@@ -93,10 +94,37 @@ function rmt_flush_page_cache() {
 	}
 }
 
-/** Read a value for the form using "section.key". */
-function rmt_field_value( $path ) {
+/** Panel language being edited (?lang=en). */
+function rmt_panel_lang() {
+	return isset( $_GET['lang'] ) && 'en' === $_GET['lang'] ? 'en' : 'ar'; // phpcs:ignore
+}
+
+/**
+ * Raw stored value for a field in the panel language.
+ *
+ * @param string $path "section.key".
+ * @param string $type Field type.
+ * @return mixed
+ */
+function rmt_field_value( $path, $type = 'text' ) {
+	static $raw = null;
+	if ( null === $raw ) {
+		$raw = rmt_raw_options();
+	}
 	list( $s, $k ) = explode( '.', $path );
-	return rmt_get( $s, $k );
+	if ( 'en' === rmt_panel_lang() && rmt_is_i18n( $type, $path ) ) {
+		$k .= '_en';
+	}
+	return isset( $raw[ $s ][ $k ] ) ? $raw[ $s ][ $k ] : '';
+}
+
+/** Input name key for a scalar field in the panel language. */
+function rmt_field_key( $path, $type ) {
+	list( $s, $k ) = explode( '.', $path );
+	if ( 'en' === rmt_panel_lang() && rmt_is_i18n( $type, $path ) ) {
+		$k .= '_en';
+	}
+	return 'rmt[' . $s . '][' . $k . ']';
 }
 
 /**
@@ -158,6 +186,12 @@ function rmt_render_input( $type, $name, $value, $opts = array(), $id = '' ) {
 			printf( '<input type="url" class="rmt-media-url" name="%s"%s value="%s" placeholder="رابط الملف">', esc_attr( $name ), $id_attr, esc_attr( $value ) );
 			echo '<button type="button" class="button rmt-media-pick">اختيار / رفع</button> <button type="button" class="button-link rmt-media-clear">إزالة</button></div>';
 			break;
+		case 'map_embed':
+			printf( '<textarea name="%s"%s rows="3" dir="ltr" placeholder="&lt;iframe src=&quot;https://www.google.com/maps/embed?pb=...&quot;&gt;&lt;/iframe&gt;">%s</textarea>', esc_attr( $name ), $id_attr, esc_textarea( $value ) );
+			if ( $value ) {
+				echo '<p class="rmt-map-ok">✔ تم ربط الخريطة بدقة. الإحداثيات: <code dir="ltr">' . esc_html( rmt_get( 'general', 'lat' ) . ', ' . rmt_get( 'general', 'lng' ) ) . '</code></p>';
+			}
+			break;
 		case 'url':
 			printf( '<input type="url" name="%s"%s value="%s" dir="ltr">', esc_attr( $name ), $id_attr, esc_attr( $value ) );
 			break;
@@ -170,18 +204,22 @@ function rmt_render_input( $type, $name, $value, $opts = array(), $id = '' ) {
 }
 
 /**
- * Render one repeater row.
+ * Render one repeater row. Both languages are always posted; the inactive
+ * language's text travels in hidden inputs.
  *
  * @param string     $base Name base e.g. rmt[home][stats].
  * @param array      $subs Sub-field defs.
  * @param array      $row  Values.
  * @param string|int $i    Index or __i__ template token.
+ * @param string     $rep  Repeater path (section.key).
  */
-function rmt_render_row( $base, $subs, $row, $i ) {
+function rmt_render_row( $base, $subs, $row, $i, $rep = '' ) {
+	$en    = 'en' === rmt_panel_lang();
 	$label = '';
 	foreach ( array( 'title', 'name', 'q', 'label', 'year' ) as $k ) {
-		if ( ! empty( $row[ $k ] ) ) {
-			$label = $row[ $k ];
+		$kk = $en && isset( $row[ $k . '_en' ] ) && '' !== $row[ $k . '_en' ] ? $k . '_en' : $k;
+		if ( ! empty( $row[ $kk ] ) ) {
+			$label = $row[ $kk ];
 			break;
 		}
 	}
@@ -190,9 +228,15 @@ function rmt_render_row( $base, $subs, $row, $i ) {
 	echo '<span class="rmt-row-actions"><button type="button" class="button-link rmt-row-toggle">تعديل</button> <button type="button" class="button-link rmt-row-dup">نسخ</button> <button type="button" class="button-link rmt-row-del">حذف</button></span></div>';
 	echo '<div class="rmt-row-body">';
 	foreach ( $subs as $sub ) {
-		$v = isset( $row[ $sub[0] ] ) ? $row[ $sub[0] ] : ( 'toggle' === $sub[1] ? '0' : '' );
-		echo '<div class="rmt-field rmt-field-' . esc_attr( $sub[1] ) . '"><label>' . esc_html( $sub[2] ) . '</label>';
-		rmt_render_input( $sub[1], $base . '[' . $i . '][' . $sub[0] . ']', $v, isset( $sub[4] ) ? $sub[4] : array() );
+		$i18n = rmt_is_i18n( $sub[1], 'sub.' . $sub[0] ) && ! in_array( 'sub.' . $sub[0] . '@' . $rep, rmt_i18n_skip(), true );
+		$vis  = ( $i18n && $en ) ? $sub[0] . '_en' : $sub[0];
+		$hid  = $i18n ? ( $en ? $sub[0] : $sub[0] . '_en' ) : '';
+		$v    = isset( $row[ $vis ] ) ? $row[ $vis ] : ( 'toggle' === $sub[1] ? '0' : '' );
+		echo '<div class="rmt-field rmt-field-' . esc_attr( $sub[1] ) . '"><label>' . esc_html( $sub[2] ) . ( $i18n ? ' <em class="rmt-lang-tag">' . ( $en ? 'EN' : 'ع' ) . '</em>' : '' ) . '</label>';
+		rmt_render_input( $sub[1], $base . '[' . $i . '][' . $vis . ']', $v, isset( $sub[4] ) ? $sub[4] : array() );
+		if ( $hid ) {
+			printf( '<input type="hidden" name="%s" value="%s">', esc_attr( $base . '[' . $i . '][' . $hid . ']' ), esc_attr( isset( $row[ $hid ] ) ? $row[ $hid ] : '' ) );
+		}
 		echo '</div>';
 	}
 	echo '</div></div>';
@@ -213,12 +257,20 @@ function rmt_render_panel() {
 				<p>كل محتوى الموقع من مكان واحد. عدّل ثم اضغط «حفظ التغييرات».</p>
 			</div>
 			<div class="rmt-top-actions">
-				<a class="button" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener" data-tour="view">عرض الموقع ↗</a>
+				<span class="rmt-langs" data-tour="lang">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=rmt-panel&lang=ar' ) ); ?>" class="<?php echo 'ar' === rmt_panel_lang() ? 'is-on' : ''; ?>">المحتوى العربي</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=rmt-panel&lang=en' ) ); ?>" class="<?php echo 'en' === rmt_panel_lang() ? 'is-on' : ''; ?>">English</a>
+				</span>
+				<a class="button" href="<?php echo esc_url( 'en' === rmt_panel_lang() ? home_url( '/en/' ) : home_url( '/' ) ); ?>" target="_blank" rel="noopener" data-tour="view">عرض الموقع ↗</a>
 				<a class="button" href="<?php echo esc_url( admin_url( 'edit.php?post_type=rmt_lead' ) ); ?>">طلبات العملاء <?php echo $newl ? '<span class="rmt-pill">' . (int) $newl . '</span>' : ''; ?></a>
 				<button type="button" class="button button-secondary rmt-start-tour" data-tour="help">▶ الدليل التفاعلي</button>
 			</div>
 		</header>
+		<hr class="wp-header-end">
 
+		<?php if ( 'en' === rmt_panel_lang() ) : ?>
+			<div class="notice notice-info rmt-en-note"><p><strong>أنت تعدّل النسخة الإنجليزية.</strong> الحقول المعلّمة بـ <em class="rmt-lang-tag">EN</em> خاصة بالإنجليزي، أما الصور والأرقام والروابط فمشتركة بين اللغتين.</p></div>
+		<?php endif; ?>
 		<?php if ( 'saved' === $msg ) : ?>
 			<div class="notice notice-success is-dismissible"><p>تم حفظ التغييرات بنجاح ✔</p></div>
 		<?php elseif ( 'reset' === $msg ) : ?>
@@ -228,6 +280,7 @@ function rmt_render_panel() {
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="rmt-form">
 			<input type="hidden" name="action" value="rmt_save_panel">
 			<input type="hidden" name="rmt_tab" value="general" class="rmt-current-tab">
+			<input type="hidden" name="rmt_lang" value="<?php echo esc_attr( rmt_panel_lang() ); ?>">
 			<?php wp_nonce_field( 'rmt_save_panel' ); ?>
 
 			<div class="rmt-layout">
@@ -257,7 +310,7 @@ function rmt_render_panel() {
 										$help          = isset( $f[3] ) ? $f[3] : '';
 										$fid           = 'rmt-' . $s . '-' . $k;
 										if ( 'repeater' === $f[1] ) :
-											$rows = (array) rmt_field_value( $f[0] );
+											$rows = (array) rmt_field_value( $f[0], 'repeater' );
 											?>
 											<div class="rmt-field rmt-repeater" data-base="<?php echo esc_attr( $name ); ?>" data-tour="rep-<?php echo esc_attr( $s . '-' . $k ); ?>">
 												<label><?php echo esc_html( $f[2] ); ?> <span class="rmt-count">(<?php echo count( $rows ); ?>)</span></label>
@@ -267,11 +320,11 @@ function rmt_render_panel() {
 													<?php
 													$i = 0;
 													foreach ( $rows as $row ) {
-														rmt_render_row( $name, $f[4], $row, $i++ );
+														rmt_render_row( $name, $f[4], $row, $i++, $f[0] );
 													}
 													?>
 												</div>
-												<script type="text/template" class="rmt-row-tpl"><?php rmt_render_row( $name, $f[4], array(), '__i__' ); ?></script>
+												<script type="text/template" class="rmt-row-tpl"><?php rmt_render_row( $name, $f[4], array(), '__i__', $f[0] ); ?></script>
 												<p class="rmt-rep-actions">
 													<button type="button" class="button rmt-row-add">+ إضافة عنصر</button>
 													<?php if ( ! empty( $f[5] ) ) : ?>
@@ -281,8 +334,8 @@ function rmt_render_panel() {
 											</div>
 										<?php else : ?>
 											<div class="rmt-field rmt-field-<?php echo esc_attr( $f[1] ); ?>">
-												<label for="<?php echo esc_attr( $fid ); ?>"><?php echo esc_html( $f[2] ); ?></label>
-												<?php rmt_render_input( $f[1], $name, rmt_field_value( $f[0] ), isset( $f[4] ) ? $f[4] : array(), $fid ); ?>
+												<label for="<?php echo esc_attr( $fid ); ?>"><?php echo esc_html( $f[2] ); ?><?php echo rmt_is_i18n( $f[1], $f[0] ) ? ' <em class="rmt-lang-tag">' . ( 'en' === rmt_panel_lang() ? 'EN' : 'ع' ) . '</em>' : ''; // phpcs:ignore ?></label>
+												<?php rmt_render_input( $f[1], rmt_field_key( $f[0], $f[1] ), rmt_field_value( $f[0], $f[1] ), isset( $f[4] ) ? $f[4] : array(), $fid ); ?>
 												<?php if ( $help ) : ?><p class="description"><?php echo esc_html( $help ); ?></p><?php endif; ?>
 											</div>
 										<?php endif; ?>
@@ -344,13 +397,15 @@ function rmt_render_guide_page() {
 		array( 'dashicons-awards', 'العملاء', 'ارفع شعار كل عميل (PNG شفاف). اختر عدة شعارات مرة واحدة من زر "إضافة دفعة" ثم اكتب اسم كل عميل.' ),
 		array( 'dashicons-email-alt', 'الطلبات', 'كل طلب عرض سعر يُرسل على الإيميلات المحددة ويُحفظ في "طلبات العملاء" حتى لو لم يصل الإيميل.' ),
 		array( 'dashicons-search', 'السيو', 'لكل صفحة عنوان ووصف مع عدّاد للأحرف. راجع "فحص السيو السريع" وأكمل البنود غير المكتملة.' ),
+		array( 'dashicons-translation', 'النسخة الإنجليزية', 'من زر English أعلى اللوحة تعدّل نصوص النسخة الإنجليزية (/en/). الصور والفيديوهات والأرقام مشتركة بين اللغتين.' ),
+		array( 'dashicons-location', 'الخريطة', 'في البيانات العامة الصق كود تضمين الخريطة من Google Maps (مشاركة ← تضمين خريطة) لتظهر الخريطة والإحداثيات بدقة.' ),
 		array( 'dashicons-saved', 'الحفظ', 'زر "حفظ التغييرات" ثابت أسفل الشاشة. بعد الحفظ اضغط "عرض الموقع" للتأكد.' ),
 	);
 	?>
 	<div class="wrap rmt-wrap rmt-guide" dir="rtl">
 		<header class="rmt-top">
 			<img src="<?php echo esc_url( rmt_logo_url( 'small' ) ); ?>" alt="" width="54" height="54">
-			<div><h1>دليل استخدام لوحة التحكم</h1><p>8 خطوات بسيطة لإدارة الموقع بالكامل.</p></div>
+			<div><h1>دليل استخدام لوحة التحكم</h1><p>10 خطوات بسيطة لإدارة الموقع بالكامل.</p></div>
 			<div class="rmt-top-actions"><a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=rmt-panel&tour=1' ) ); ?>">▶ ابدأ الجولة التفاعلية</a></div>
 		</header>
 		<ol class="rmt-guide-steps">

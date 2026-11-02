@@ -17,8 +17,8 @@ rmt_page_hero( 'services', $sv['title'], $sv['intro'] );
 	<div class="container">
 		<p class="cats-note reveal"><?php echo esc_html( $sv['cats_note'] ); ?></p>
 
-		<div class="filters reveal" role="tablist" aria-label="فئات الخدمات">
-			<button class="chip is-active" data-filter="all" role="tab" aria-selected="true">جميع الخدمات <em><?php echo count( $items ); ?></em></button>
+		<div class="filters reveal" role="tablist" aria-label="<?php echo esc_attr( rmt_t( 'فئات الخدمات' ) ); ?>">
+			<button class="chip is-active" data-filter="all" role="tab" aria-selected="true"><?php rmt_te( 'جميع الخدمات' ); ?> <em><?php echo count( $items ); ?></em></button>
 			<?php foreach ( $cats as $k => $label ) : ?>
 				<?php
 				$count = count( array_filter( $items, function ( $s ) use ( $k ) { return $s['cat'] === $k; } ) );
@@ -30,7 +30,7 @@ rmt_page_hero( 'services', $sv['title'], $sv['intro'] );
 			<?php endforeach; ?>
 		</div>
 
-		<nav class="svc-index reveal" aria-label="فهرس الخدمات">
+		<nav class="svc-index reveal" aria-label="<?php echo esc_attr( rmt_t( 'فهرس الخدمات' ) ); ?>">
 			<?php foreach ( $items as $i => $s ) : ?>
 				<a href="#<?php echo esc_attr( rmt_slug( $s['title'], $i ) ); ?>" data-type="<?php echo esc_attr( $s['cat'] ); ?>"><?php echo rmt_icon( $s['icon'], 18 ); // phpcs:ignore ?><?php echo esc_html( $s['title'] ); ?></a>
 			<?php endforeach; ?>
@@ -47,8 +47,8 @@ rmt_page_hero( 'services', $sv['title'], $sv['intro'] );
 						<h2><?php echo esc_html( $s['title'] ); ?></h2>
 						<p><?php echo esc_html( $s['text'] ); ?></p>
 						<div class="svc-actions">
-							<a class="btn btn-primary btn-sm" href="<?php echo esc_url( add_query_arg( 'service', rawurlencode( $s['title'] ), rmt_page_url( 'contact' ) ) ); ?>#quote">اطلب عرض سعر لهذه الخدمة</a>
-							<a class="btn btn-wa btn-sm" href="<?php echo esc_url( rmt_whatsapp_url( 'السلام عليكم، أرغب في عرض سعر لخدمة: ' . $s['title'] ) ); ?>" target="_blank" rel="noopener" data-track="whatsapp"><?php echo rmt_icon( 'whatsapp', 16 ); // phpcs:ignore ?>استفسار واتساب</a>
+							<a class="btn btn-primary btn-sm" href="<?php echo esc_url( add_query_arg( 'service', rawurlencode( $s['title'] ), rmt_page_url( 'contact' ) ) ); ?>#quote"><?php rmt_te( 'اطلب عرض سعر لهذه الخدمة' ); ?></a>
+							<a class="btn btn-wa btn-sm" href="<?php echo esc_url( rmt_whatsapp_url( rmt_t( 'السلام عليكم، أرغب في عرض سعر لخدمة: ' ) . $s['title'] ) ); ?>" target="_blank" rel="noopener" data-track="whatsapp"><?php echo rmt_icon( 'whatsapp', 16 ); // phpcs:ignore ?><?php rmt_te( 'استفسار واتساب' ); ?></a>
 						</div>
 					</div>
 					<?php if ( $s['image'] ) : ?>

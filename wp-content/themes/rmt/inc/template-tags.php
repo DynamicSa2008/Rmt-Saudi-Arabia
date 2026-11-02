@@ -52,7 +52,7 @@ function rmt_icon( $name, $size = 24 ) {
 		return '<svg class="ico" width="' . (int) $size . '" height="' . (int) $size . '" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.3-.6-.4zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4A9.8 9.8 0 0 1 12 2.2a9.8 9.8 0 0 1 9.8 9.8c0 5.4-4.4 9.8-9.8 9.8zM20.5 3.5A11.8 11.8 0 0 0 1.7 17.6L0 24l6.5-1.7a11.8 11.8 0 0 0 17.3-10.4c0-3.1-1.2-6.1-3.3-8.4z"/></svg>';
 	}
 	$path = isset( $p[ $name ] ) ? $p[ $name ] : $p['star'];
-	return '<svg class="ico" width="' . (int) $size . '" height="' . (int) $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $path . '</svg>';
+	return '<svg class="ico' . ( 'arrow' === $name ? ' ico-arrow' : '' ) . '" width="' . (int) $size . '" height="' . (int) $size . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $path . '</svg>';
 }
 
 /**
@@ -143,8 +143,8 @@ function rmt_page_hero( $key, $title, $lead = '' ) {
 	<section class="page-hero">
 		<div class="page-hero-bg" aria-hidden="true"></div>
 		<div class="container">
-			<nav class="crumbs" aria-label="مسار التنقل">
-				<a href="<?php echo esc_url( home_url( '/' ) ); ?>">الرئيسية</a>
+			<nav class="crumbs" aria-label="<?php echo esc_attr( rmt_t( 'مسار التنقل' ) ); ?>">
+				<a href="<?php echo esc_url( rmt_page_url( 'home' ) ); ?>"><?php rmt_te( 'الرئيسية' ); ?></a>
 				<span aria-hidden="true">›</span>
 				<span aria-current="page"><?php echo esc_html( isset( $items[ $key ] ) ? $items[ $key ] : $title ); ?></span>
 			</nav>
@@ -189,7 +189,7 @@ function rmt_gallery( $limit = 0 ) {
 		}
 	}
 	if ( $has_img && $has_vid ) {
-		echo '<div class="filters reveal" role="tablist" aria-label="تصفية الأعمال"><button class="chip is-active" data-filter="all" role="tab" aria-selected="true">الكل</button><button class="chip" data-filter="video" role="tab" aria-selected="false">فيديو</button><button class="chip" data-filter="image" role="tab" aria-selected="false">صور</button></div>';
+		echo '<div class="filters reveal" role="tablist" aria-label="' . esc_attr( rmt_t( 'تصفية الأعمال' ) ) . '"><button class="chip is-active" data-filter="all" role="tab" aria-selected="true">' . esc_html( rmt_t( 'الكل' ) ) . '</button><button class="chip" data-filter="video" role="tab" aria-selected="false">' . esc_html( rmt_t( 'فيديو' ) ) . '</button><button class="chip" data-filter="image" role="tab" aria-selected="false">' . esc_html( rmt_t( 'صور' ) ) . '</button></div>';
 	}
 	echo '<div class="gallery" data-gallery>';
 	foreach ( $items as $i => $it ) {
@@ -197,7 +197,7 @@ function rmt_gallery( $limit = 0 ) {
 		$thumb  = $is_vid ? $it['poster'] : $it['src'];
 		$alt    = $it['title'] . ' – ' . rmt_get( 'general', 'short_name' ) . ( $it['place'] ? ' – ' . $it['place'] : '' );
 		printf(
-			'<figure class="g-item reveal" data-type="%1$s" style="--d:%6$dms"><button type="button" class="g-open" data-src="%2$s" data-kind="%1$s" data-poster="%3$s" data-title="%4$s" aria-label="عرض: %4$s">%5$s',
+			'<figure class="g-item reveal" data-type="%1$s" style="--d:%6$dms"><button type="button" class="g-open" data-src="%2$s" data-kind="%1$s" data-poster="%3$s" data-title="%4$s" aria-label="' . esc_attr( rmt_t( 'عرض:' ) ) . ' %4$s">%5$s',
 			esc_attr( $is_vid ? 'video' : 'image' ),
 			esc_url( $it['src'] ),
 			esc_url( $it['poster'] ),
@@ -220,8 +220,8 @@ function rmt_gallery( $limit = 0 ) {
  */
 function rmt_client_card( $c ) {
 	$inner = $c['logo']
-		? rmt_img( $c['logo'], 'شعار ' . $c['name'], 'c-logo', false, '200px' )
-		: '<span class="c-mono" aria-hidden="true">' . esc_html( mb_substr( preg_replace( '/^(شركة|فندق|مجموعة|أمانة منطقة|مجمعات|مستشفيات|بنك)\s+/u', '', $c['name'] ), 0, 1 ) ) . '</span>';
+		? rmt_img( $c['logo'], rmt_t( 'شعار ' ) . $c['name'], 'c-logo', false, '200px' )
+		: '<span class="c-mono" aria-hidden="true">' . esc_html( mb_substr( preg_replace( '/^(شركة|فندق|مجموعة|أمانة منطقة|مجمعات|مستشفيات|بنك|Riyadh|Dammam|Al|The)\s+/u', '', $c['name'] ), 0, 1 ) ) . '</span>';
 	$tag   = $c['url'] ? 'a' : 'div';
 	$href  = $c['url'] ? ' href="' . esc_url( $c['url'] ) . '" target="_blank" rel="noopener nofollow"' : '';
 	printf(

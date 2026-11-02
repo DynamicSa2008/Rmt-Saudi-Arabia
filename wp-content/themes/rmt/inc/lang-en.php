@@ -1,0 +1,147 @@
+<?php
+/**
+ * English dictionary for static UI strings (Arabic source => English).
+ *
+ * @package RMT
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+return array(
+	// Navigation & general.
+	'الرئيسية'                     => 'Home',
+	'من نحن'                       => 'About Us',
+	'خدماتنا'                      => 'Our Services',
+	'عملاؤنا'                      => 'Our Clients',
+	'اتصل بنا'                     => 'Contact Us',
+	'القائمة الرئيسية'              => 'Main menu',
+	'فتح القائمة'                  => 'Open menu',
+	'تخطَّ إلى المحتوى'             => 'Skip to content',
+	'مسار التنقل'                  => 'Breadcrumb',
+	'للمقاولات والنظافة'            => 'Contracting & Cleaning',
+	'شعار '                        => 'Logo – ',
+	'عرض سعر'                      => 'Get a Quote',
+	'اطلب عرض سعر'                 => 'Request a Quote',
+	'واتساب'                       => 'WhatsApp',
+	'اتصال'                        => 'Call',
+	'تواصل سريع'                   => 'Quick contact',
+	'تواصل عبر واتساب'              => 'Chat on WhatsApp',
+	'العودة للأعلى'                 => 'Back to top',
+	'الرياض'                       => 'Riyadh',
+	'المملكة العربية السعودية'       => 'Saudi Arabia',
+	'البحرين'                      => 'Bahrain',
+	'المزيد عن '                   => 'More about ',
+	'التفاصيل'                     => 'Details',
+	'اقرأ المزيد'                  => 'Read more',
+
+	// Home.
+	'أرقامنا'                      => 'Our numbers',
+	'ماذا نقدم'                    => 'What we do',
+	'من القمة إلى القاعدة'          => 'From rooftop to ground',
+	'رسم توضيحي لمبنى يوضح خدماتنا من السطح حتى الأرض' => 'Illustration of a building showing our services from the rooftop to the ground',
+	'اضغط على أي نقطة في المبنى لتتعرّف على الخدمة المناسبة لها.' => 'Tap any point on the building to see the matching service.',
+	'عرض جميع الخدمات'             => 'View all services',
+	'قيمتنا المضافة'                => 'Our added value',
+	'عامًا من الثقة'                => 'years of trust',
+	'فريق رفال المدينة ينظف واجهة برج زجاجي بالحبال في الرياض' => 'Rafal Al Madinah rope-access team cleaning a glass tower façade in Riyadh',
+	'سابقة الأعمال'                => 'Portfolio',
+	'مشاهدة كل الأعمال'             => 'See all projects',
+	'تعرّف على عملائنا'             => 'Meet our clients',
+	'شعارات العملاء'               => 'Client logos',
+	'استفسارات'                    => 'Questions',
+
+	// Gallery & lightbox.
+	'تصفية الأعمال'                => 'Filter projects',
+	'الكل'                         => 'All',
+	'فيديو'                        => 'Video',
+	'صور'                          => 'Photos',
+	'عرض:'                         => 'View:',
+	'عرض العمل'                    => 'Project viewer',
+	'إغلاق'                        => 'Close',
+	'السابق'                       => 'Previous',
+	'التالي'                       => 'Next',
+
+	// About.
+	'نبذة عنا'                     => 'Who we are',
+	'سنة التأسيس'                  => 'Founded',
+	'المقر الرئيسي'                 => 'Headquarters',
+	'حكومي وخاص'                   => 'Public & private',
+	'القطاعات المخدومة'             => 'Sectors served',
+	'فني من رفال المدينة يعمل على واجهة زجاجية بنظام الحبال' => 'Rafal Al Madinah technician working on a glass façade using rope access',
+	'رسالتنا'                      => 'Our Mission',
+	'رؤيتنا'                       => 'Our Vision',
+	'قيمنا'                        => 'Our Values',
+	'المبادئ التي نلتزم بها في كل مشروع.' => 'The principles we commit to on every project.',
+	'ما يميزنا'                    => 'What sets us apart',
+	'السلامة أولًا'                 => 'Safety first',
+	'منذ 2003'                     => 'Since 2003',
+	'مسيرتنا… نزولًا بالحبل'        => 'Our Story, One Floor at a Time',
+	'كل مرحلة في قصتنا كانت دورًا جديدًا نصل إليه بثبات وأمان.' => 'Every chapter of our story was a new floor, reached steadily and safely.',
+	'الدور'                        => 'Floor',
+	'الأرض'                        => 'Ground',
+	'الدور القادم… مشروعك'          => 'The next floor… your project',
+	'نستعد للنزول على واجهة مبناك بنفس الالتزام والدقة.' => 'We are ready to descend your façade with the same commitment and precision.',
+	'ابدأ مشروعك معنا'              => 'Start your project',
+
+	// Services.
+	'فئات الخدمات'                 => 'Service categories',
+	'جميع الخدمات'                 => 'All services',
+	'فهرس الخدمات'                 => 'Services index',
+	'اطلب عرض سعر لهذه الخدمة'      => 'Request a quote for this service',
+	'استفسار واتساب'               => 'Ask on WhatsApp',
+	'السلام عليكم، أرغب في عرض سعر لخدمة: ' => 'Hello, I would like a quotation for: ',
+	'خدمات الواجهات والمرتفعات'      => 'Façades & work at height',
+	'خدمات النظافة الداخلية'         => 'Interior cleaning',
+	'خدمات المطاعم والفنادق والمنشآت' => 'Restaurants, hotels & facilities',
+
+	// Clients.
+	'الجهات الحكومية'               => 'Government entities',
+	'الشركات والمجمعات'             => 'Companies & complexes',
+	'الفنادق والمستشفيات'           => 'Hotels & hospitals',
+	'والعديد من الجهات الحكومية الأخرى في المملكة' => 'And many other government entities across the Kingdom',
+	'خارج المملكة'                 => 'Outside Saudi Arabia',
+	'معرض المشاريع'                => 'Project gallery',
+
+	// Contact.
+	'بيانات التواصل'               => 'Contact details',
+	'العنوان'                      => 'Address',
+	'الجوال (اتصال)'               => 'Mobile (call)',
+	'الهاتف والفاكس'               => 'Phone & fax',
+	'البريد الإلكتروني'             => 'Email',
+	'أوقات العمل'                  => 'Working hours',
+	'واتساب مباشر'                 => 'WhatsApp us',
+	'اتصل الآن'                    => 'Call now',
+	'نموذج طلب عرض سعر'            => 'Quotation request form',
+	'الحقول المعلّمة بـ * مطلوبة. نرد عادة خلال ساعات العمل.' => 'Fields marked * are required. We usually reply within working hours.',
+	'تعذّر إرسال الطلب، يرجى التأكد من الاسم ورقم الجوال ثم المحاولة مجددًا، أو التواصل عبر واتساب.' => 'We could not send your request. Please check your name and mobile number and try again, or contact us on WhatsApp.',
+	'الموقع'                       => 'Website',
+	'الاسم *'                      => 'Name *',
+	'اسم الجهة'                    => 'Organisation',
+	'رقم الجوال *'                 => 'Mobile number *',
+	'المدينة'                      => 'City',
+	'نوع الخدمة *'                 => 'Service type *',
+	'نوع المبنى وعدد الأدوار'        => 'Building type & number of floors',
+	'مثال: برج تجاري – 18 دورًا'     => 'e.g. Commercial tower – 18 floors',
+	'تفاصيل إضافية'                => 'Additional details',
+	'إرسال الطلب'                  => 'Send request',
+	'أخرى'                         => 'Other',
+	'موقعنا على الخريطة'            => 'Find Us on the Map',
+	'زورونا'                       => 'Visit us',
+	'عرض الخريطة التفاعلية'         => 'Show interactive map',
+	'احصل على الاتجاهات'            => 'Get directions',
+	'فتح في خرائط Google'           => 'Open in Google Maps',
+
+	// Footer.
+	'للاستفسار وطلب المعاينة'        => 'Enquiries & site inspections',
+	'أو راسلنا على واتساب'          => 'or message us on WhatsApp',
+	'عن المؤسسة'                   => 'About the company',
+	'روابط الموقع'                 => 'Site links',
+	'الصفحات'                      => 'Pages',
+
+	// 404 & blog.
+	'الصفحة غير موجودة'             => 'Page not found',
+	'ربما تم نقل الصفحة أو أن الرابط غير صحيح. يمكنك العودة للرئيسية أو التواصل معنا مباشرة.' => 'The page may have moved or the link is incorrect. You can go back home or contact us directly.',
+	'العودة للرئيسية'               => 'Back to home',
+	'المدونة'                      => 'Blog',
+	'لا يوجد محتوى بعد.'            => 'No content yet.',
+);

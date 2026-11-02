@@ -8,7 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 $g = rmt_get( 'general' );
 ?><!doctype html>
-<html <?php language_attributes(); ?> dir="rtl">
+<html <?php language_attributes(); ?>>
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -19,7 +19,17 @@ $g = rmt_get( 'general' );
 <?php if ( rmt_get( 'seo', 'gtm' ) ) : ?>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?php echo esc_attr( rmt_get( 'seo', 'gtm' ) ); ?>" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <?php endif; ?>
-<a class="skip-link" href="#main">تخطَّ إلى المحتوى</a>
+<div class="loader" aria-hidden="true">
+	<div class="loader-in">
+		<div class="loader-mark">
+			<svg class="loader-ring" viewBox="0 0 120 120" aria-hidden="true"><rect x="22" y="22" width="76" height="76" rx="16" transform="rotate(45 60 60)" pathLength="100"/></svg>
+			<img src="<?php echo esc_url( rmt_logo_url( 'small' ) ); ?>" alt="" width="86" height="86">
+		</div>
+		<span class="loader-name"><?php echo esc_html( $g['company_name'] ); ?></span>
+		<span class="loader-bar"><i></i></span>
+	</div>
+</div>
+<a class="skip-link" href="#main"><?php rmt_te( 'تخطَّ إلى المحتوى' ); ?></a>
 
 <div class="topbar">
 	<div class="container topbar-in">
@@ -34,15 +44,15 @@ $g = rmt_get( 'general' );
 
 <header class="site-header" data-header>
 	<div class="container header-in">
-		<a class="brand" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home" aria-label="<?php echo esc_attr( $g['company_name'] ); ?> – الرئيسية">
-			<img src="<?php echo esc_url( rmt_logo_url( 'small' ) ); ?>" alt="شعار <?php echo esc_attr( $g['company_name'] ); ?>" width="56" height="56">
+		<a class="brand" href="<?php echo esc_url( rmt_page_url( 'home' ) ); ?>" rel="home" aria-label="<?php echo esc_attr( $g['company_name'] . ' – ' . rmt_t( 'الرئيسية' ) ); ?>">
+			<img src="<?php echo esc_url( rmt_logo_url( 'small' ) ); ?>" alt="<?php echo esc_attr( rmt_t( 'شعار ' ) . $g['company_name'] ); ?>" width="56" height="56">
 			<span class="brand-txt">
 				<strong><?php echo esc_html( $g['short_name'] ); ?></strong>
-				<small>للمقاولات والنظافة</small>
+				<small><?php rmt_te( 'للمقاولات والنظافة' ); ?></small>
 			</span>
 		</a>
 
-		<nav class="main-nav" id="main-nav" aria-label="القائمة الرئيسية">
+		<nav class="main-nav" id="main-nav" aria-label="<?php echo esc_attr( rmt_t( 'القائمة الرئيسية' ) ); ?>">
 			<?php rmt_nav( 'nav' ); ?>
 			<div class="nav-mobile-extra">
 				<?php rmt_cta_buttons(); ?>
@@ -50,9 +60,10 @@ $g = rmt_get( 'general' );
 		</nav>
 
 		<div class="header-cta">
-			<a class="btn btn-sm btn-wa hide-sm" href="<?php echo esc_url( rmt_whatsapp_url() ); ?>" target="_blank" rel="noopener" data-track="whatsapp"><?php echo rmt_icon( 'whatsapp', 18 ); // phpcs:ignore ?>واتساب</a>
-			<a class="btn btn-sm btn-primary hide-xs" href="<?php echo esc_url( rmt_page_url( 'contact' ) ); ?>#quote">عرض سعر</a>
-			<button class="burger" type="button" aria-controls="main-nav" aria-expanded="false" aria-label="فتح القائمة" data-burger><span></span><span></span><span></span></button>
+			<a class="btn btn-sm btn-wa hide-sm" href="<?php echo esc_url( rmt_whatsapp_url() ); ?>" target="_blank" rel="noopener" data-track="whatsapp"><?php echo rmt_icon( 'whatsapp', 18 ); // phpcs:ignore ?><?php rmt_te( 'واتساب' ); ?></a>
+			<a class="btn btn-sm btn-primary hide-xs" href="<?php echo esc_url( rmt_page_url( 'contact' ) ); ?>#quote"><?php rmt_te( 'عرض سعر' ); ?></a>
+			<a class="lang-switch" href="<?php echo esc_url( rmt_alt_url( rmt_is_en() ? 'ar' : 'en' ) ); ?>" hreflang="<?php echo rmt_is_en() ? 'ar' : 'en'; ?>" lang="<?php echo rmt_is_en() ? 'ar' : 'en'; ?>" aria-label="<?php echo esc_attr( rmt_is_en() ? 'التصفح بالعربية' : 'Browse in English' ); ?>"><?php echo rmt_is_en() ? 'عربي' : 'EN'; ?></a>
+			<button class="burger" type="button" aria-controls="main-nav" aria-expanded="false" aria-label="<?php echo esc_attr( rmt_t( 'فتح القائمة' ) ); ?>" data-burger><span></span><span></span><span></span></button>
 		</div>
 	</div>
 </header>

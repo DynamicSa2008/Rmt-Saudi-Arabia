@@ -69,7 +69,7 @@ function rmt_form_services() {
 			$list[] = $s['title'];
 		}
 	}
-	$list[] = 'أخرى';
+	$list[] = rmt_t( 'أخرى' );
 	return $list;
 }
 

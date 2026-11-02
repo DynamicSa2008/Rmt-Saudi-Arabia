@@ -33,7 +33,7 @@ $clients  = (array) rmt_get( 'clients', 'items' );
 		</div>
 	</div>
 	<div class="container">
-		<ul class="stats reveal" aria-label="أرقامنا">
+		<ul class="stats reveal" aria-label="<?php echo esc_attr( rmt_t( 'أرقامنا' ) ); ?>">
 			<?php foreach ( (array) $h['stats'] as $s ) : ?>
 				<li><strong><span data-count="<?php echo esc_attr( $s['number'] ); ?>"><?php echo esc_html( $s['number'] ); ?></span><?php echo esc_html( $s['suffix'] ); ?></strong><span><?php echo esc_html( $s['label'] ); ?></span></li>
 			<?php endforeach; ?>
@@ -41,37 +41,16 @@ $clients  = (array) rmt_get( 'clients', 'items' );
 	</div>
 </section>
 
-<section class="section services-home" id="services">
-	<div class="container">
-		<?php rmt_section_head( $h['services_title'], $h['services_text'], 'h2', 'ماذا نقدم' ); ?>
-		<div class="cards">
-			<?php
-			$n = 0;
-			foreach ( $services as $i => $s ) :
-				if ( '1' !== $s['home'] ) {
-					continue;
-				}
-				?>
-				<article class="card reveal" style="--d:<?php echo (int) ( $n++ % 3 ) * 90; ?>ms">
-					<span class="card-ico"><?php echo rmt_icon( $s['icon'], 30 ); // phpcs:ignore ?></span>
-					<h3><?php echo esc_html( $s['title'] ); ?></h3>
-					<p><?php echo esc_html( $s['short'] ); ?></p>
-					<a class="card-link" href="<?php echo esc_url( rmt_page_url( 'services' ) . '#' . rmt_slug( $s['title'], $i ) ); ?>" aria-label="المزيد عن <?php echo esc_attr( $s['title'] ); ?>">التفاصيل <?php echo rmt_icon( 'arrow', 16 ); // phpcs:ignore ?></a>
-				</article>
-			<?php endforeach; ?>
-		</div>
-		<p class="center reveal"><a class="btn btn-outline" href="<?php echo esc_url( rmt_page_url( 'services' ) ); ?>">عرض جميع الخدمات <?php echo rmt_icon( 'arrow', 18 ); // phpcs:ignore ?></a></p>
-	</div>
-</section>
+<?php get_template_part( 'template-parts/service-tower' ); ?>
 
 <section class="section why sand">
 	<div class="container why-grid">
 		<div class="why-media reveal">
-			<?php echo rmt_img( rmt_get( 'about', 'image' ), 'فريق رفال المدينة ينظف واجهة برج زجاجي بالحبال في الرياض', 'why-img', false, '(max-width: 900px) 100vw, 45vw' ); // phpcs:ignore ?>
-			<div class="why-badge"><strong><?php echo esc_html( (int) wp_date( 'Y' ) - (int) $g['founded'] ); ?>+</strong><span>عامًا من الثقة</span></div>
+			<?php echo rmt_img( rmt_get( 'about', 'image' ), rmt_t( 'فريق رفال المدينة ينظف واجهة برج زجاجي بالحبال في الرياض' ), 'why-img', false, '(max-width: 900px) 100vw, 45vw' ); // phpcs:ignore ?>
+			<div class="why-badge"><strong><?php echo esc_html( (int) wp_date( 'Y' ) - (int) $g['founded'] ); ?>+</strong><span><?php rmt_te( 'عامًا من الثقة' ); ?></span></div>
 		</div>
 		<div class="why-copy">
-			<?php rmt_section_head( $h['why_title'], '', 'h2', 'قيمتنا المضافة' ); ?>
+			<?php rmt_section_head( $h['why_title'], '', 'h2', rmt_t( 'قيمتنا المضافة' ) ); ?>
 			<ul class="why-list">
 				<?php foreach ( (array) $h['why'] as $i => $w ) : ?>
 					<li class="reveal" style="--d:<?php echo (int) $i * 80; ?>ms"><span class="tick"><?php echo rmt_icon( 'check', 18 ); // phpcs:ignore ?></span><div><h3><?php echo esc_html( $w['title'] ); ?></h3><p><?php echo esc_html( $w['text'] ); ?></p></div></li>
@@ -83,17 +62,17 @@ $clients  = (array) rmt_get( 'clients', 'items' );
 
 <section class="section projects">
 	<div class="container">
-		<?php rmt_section_head( $h['projects_title'], $h['projects_text'], 'h2', 'سابقة الأعمال' ); ?>
+		<?php rmt_section_head( $h['projects_title'], $h['projects_text'], 'h2', rmt_t( 'سابقة الأعمال' ) ); ?>
 		<?php rmt_gallery( 8 ); ?>
-		<p class="center reveal"><a class="btn btn-outline" href="<?php echo esc_url( rmt_page_url( 'clients' ) ); ?>#work">مشاهدة كل الأعمال <?php echo rmt_icon( 'arrow', 18 ); // phpcs:ignore ?></a></p>
+		<p class="center reveal"><a class="btn btn-outline" href="<?php echo esc_url( rmt_page_url( 'clients' ) ); ?>#work"><?php rmt_te( 'مشاهدة كل الأعمال' ); ?> <?php echo rmt_icon( 'arrow', 18 ); // phpcs:ignore ?></a></p>
 	</div>
 </section>
 
 <section class="section trust navy">
 	<div class="container">
-		<?php rmt_section_head( $h['trust_title'], $h['trust_text'], 'h2', 'عملاؤنا' ); ?>
+		<?php rmt_section_head( $h['trust_title'], $h['trust_text'], 'h2', rmt_t( 'عملاؤنا' ) ); ?>
 	</div>
-	<div class="marquee reveal" aria-label="شعارات العملاء">
+	<div class="marquee reveal" aria-label="<?php echo esc_attr( rmt_t( 'شعارات العملاء' ) ); ?>">
 		<div class="marquee-track">
 			<?php for ( $loop = 0; $loop < 2; $loop++ ) : ?>
 				<div class="marquee-group"<?php echo $loop ? ' aria-hidden="true"' : ''; ?>>
@@ -102,13 +81,13 @@ $clients  = (array) rmt_get( 'clients', 'items' );
 			<?php endfor; ?>
 		</div>
 	</div>
-	<p class="center reveal"><a class="btn btn-ghost-light" href="<?php echo esc_url( rmt_page_url( 'clients' ) ); ?>">تعرّف على عملائنا <?php echo rmt_icon( 'arrow', 18 ); // phpcs:ignore ?></a></p>
+	<p class="center reveal"><a class="btn btn-ghost-light" href="<?php echo esc_url( rmt_page_url( 'clients' ) ); ?>"><?php rmt_te( 'تعرّف على عملائنا' ); ?> <?php echo rmt_icon( 'arrow', 18 ); // phpcs:ignore ?></a></p>
 </section>
 
 <?php if ( ! empty( $h['faq'] ) ) : ?>
 <section class="section faq">
 	<div class="container narrow">
-		<?php rmt_section_head( $h['faq_title'], '', 'h2', 'استفسارات' ); ?>
+		<?php rmt_section_head( $h['faq_title'], '', 'h2', rmt_t( 'استفسارات' ) ); ?>
 		<div class="accordion">
 			<?php foreach ( (array) $h['faq'] as $i => $q ) : ?>
 				<details class="acc reveal"<?php echo 0 === $i ? ' open' : ''; ?>>

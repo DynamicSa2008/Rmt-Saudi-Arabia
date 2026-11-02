@@ -50,14 +50,31 @@ add_action( 'wp_enqueue_scripts', 'rmt_assets', 20 );
 function rmt_resource_hints() {
 	echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
 	echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
-	if ( is_front_page() ) {
+	if ( 'home' === rmt_current_key() ) {
 		$poster = rmt_get( 'home', 'hero_poster' );
 		if ( $poster ) {
+			// Preload exactly the file the <picture> will use (WebP for bundled assets).
+			$theme_uri = get_template_directory_uri();
+			if ( 0 === strpos( $poster, $theme_uri ) && preg_match( '/\.jpe?g$/i', $poster ) ) {
+				$webp = preg_replace( '/\.jpe?g$/i', '.webp', $poster );
+				if ( file_exists( get_template_directory() . substr( $webp, strlen( $theme_uri ) ) ) ) {
+					$poster = $webp;
+				}
+			}
 			echo '<link rel="preload" as="image" href="' . esc_url( $poster ) . '" fetchpriority="high">' . "\n";
 		}
 	}
 }
 add_action( 'wp_head', 'rmt_resource_hints', 1 );
+
+/**
+ * Page-transition loader: decide before first paint whether to show it
+ * (first visit in the session, or arriving from an internal link click).
+ */
+function rmt_loader_boot() {
+	echo "<script>(function(d){try{var s=sessionStorage,m=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(!m&&(s.getItem('rmt-nav')||!s.getItem('rmt-seen'))){d.documentElement.classList.add('is-loading');}s.setItem('rmt-seen','1');s.removeItem('rmt-nav');}catch(e){}})(document);</script>\n";
+}
+add_action( 'wp_head', 'rmt_loader_boot', 0 );
 
 /** Head clean-up: remove emoji, oEmbed discovery, RSD, generator, shortlinks. */
 function rmt_cleanup() {
@@ -113,6 +130,31 @@ function rmt_install() {
 		}
 		$ids[ $slug ] = $id;
 	}
+	// English pages live under /en/.
+	$en = get_page_by_path( 'en' );
+	$en_id = $en ? $en->ID : wp_insert_post(
+		array(
+			'post_type'   => 'page',
+			'post_status' => 'publish',
+			'post_name'   => 'en',
+			'post_title'  => 'Home',
+		)
+	);
+	$en_titles = array( 'about' => 'About Us', 'services' => 'Our Services', 'clients' => 'Our Clients', 'contact' => 'Contact Us' );
+	foreach ( $en_titles as $slug => $title ) {
+		if ( ! get_page_by_path( 'en/' . $slug ) ) {
+			wp_insert_post(
+				array(
+					'post_type'   => 'page',
+					'post_status' => 'publish',
+					'post_name'   => $slug,
+					'post_title'  => $title,
+					'post_parent' => $en_id,
+				)
+			);
+		}
+	}
+
 	update_option( 'show_on_front', 'page' );
 	update_option( 'page_on_front', $ids['home'] );
 	if ( false === strpos( (string) get_option( 'permalink_structure' ), '%postname%' ) ) {
@@ -129,7 +171,7 @@ add_action( 'after_switch_theme', 'rmt_install' );
 
 /** Re-run installer silently if pages were removed. */
 function rmt_maybe_install() {
-	if ( ! get_option( 'rmt_installed' ) ) {
+	if ( version_compare( (string) get_option( 'rmt_installed', '0' ), wp_get_theme()->get( 'Version' ), '<' ) ) {
 		rmt_install();
 	}
 }
@@ -138,11 +180,11 @@ add_action( 'admin_init', 'rmt_maybe_install' );
 /** Primary navigation items (used when no WP menu is assigned). */
 function rmt_nav_items() {
 	return array(
-		'home'     => 'الرئيسية',
-		'about'    => 'من نحن',
-		'services' => 'خدماتنا',
-		'clients'  => 'عملاؤنا',
-		'contact'  => 'اتصل بنا',
+		'home'     => rmt_t( 'الرئيسية' ),
+		'about'    => rmt_t( 'من نحن' ),
+		'services' => rmt_t( 'خدماتنا' ),
+		'clients'  => rmt_t( 'عملاؤنا' ),
+		'contact'  => rmt_t( 'اتصل بنا' ),
 	);
 }
 
@@ -152,14 +194,15 @@ function rmt_current_key() {
 		return 'home';
 	}
 	if ( is_page() ) {
-		return get_post_field( 'post_name', get_queried_object_id() );
+		$slug = get_post_field( 'post_name', get_queried_object_id() );
+		return 'en' === $slug ? 'home' : $slug;
 	}
 	return '';
 }
 
 /** Render the menu (WP menu if assigned, otherwise core pages). */
 function rmt_nav( $class = 'nav' ) {
-	if ( has_nav_menu( 'primary' ) ) {
+	if ( has_nav_menu( 'primary' ) && ! rmt_is_en() ) {
 		wp_nav_menu( array( 'theme_location' => 'primary', 'container' => false, 'menu_class' => $class, 'depth' => 1 ) );
 		return;
 	}
