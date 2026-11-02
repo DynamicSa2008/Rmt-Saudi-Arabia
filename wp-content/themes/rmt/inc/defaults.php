@@ -56,8 +56,8 @@ function rmt_defaults() {
 			'social_youtube'  => '',
 			'show_float'      => '1',
 			'show_vision'     => '1',
-			'vision_logo'     => '',
-			'vision_logo_light' => '',
+			'vision_logo'     => get_template_directory_uri() . '/assets/img/vision-2030.png',
+			'vision_logo_light' => get_template_directory_uri() . '/assets/img/vision-2030-light.png',
 		),
 
 		/* ---------------- Home ---------------- */

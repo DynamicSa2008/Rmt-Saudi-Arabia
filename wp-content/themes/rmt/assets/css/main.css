@@ -991,3 +991,8 @@ html.is-leaving .loader { animation: loaderIn .45s cubic-bezier(.76,0,.24,1) bot
 @media (prefers-reduced-motion: reduce) {
 	.ba-hint { animation: none; }
 }
+.v2030 { flex: none; }
+.v2030 img { max-width: none; width: auto; }
+.v2030-header img { height: 50px; }
+.v2030-footer img { height: 72px; }
+.ft-vision { max-width: 420px; }
