@@ -457,6 +457,36 @@
 		show(0);
 	})();
 
+	/* ---------- Blog article: reading progress, active TOC, copy link ---------- */
+	var bar = $('[data-progress]'), art = $('.post-content');
+	if (bar && art) {
+		var heads = $$('.post-content h2[id], .post-content h3[id]');
+		var links = $$('.toc a');
+		var pt = false;
+		function onRead() {
+			var r = art.getBoundingClientRect(), vh = window.innerHeight;
+			var p = Math.max(0, Math.min(1, (vh * 0.3 - r.top) / Math.max(1, r.height - vh * 0.4)));
+			bar.style.transform = 'scaleX(' + p.toFixed(3) + ')';
+			var cur = null;
+			heads.forEach(function (h) { if (h.getBoundingClientRect().top < 140) cur = h.id; });
+			links.forEach(function (a) { a.classList.toggle('is-active', a.getAttribute('href') === '#' + cur); });
+			pt = false;
+		}
+		window.addEventListener('scroll', function () { if (!pt) { requestAnimationFrame(onRead); pt = true; } }, { passive: true });
+		onRead();
+		var toc = $('[data-toc]');
+		if (toc && window.innerWidth < 960) toc.removeAttribute('open');
+	}
+	var copyBtn = $('[data-copy]');
+	if (copyBtn) {
+		copyBtn.addEventListener('click', function () {
+			var u = copyBtn.getAttribute('data-copy'), label = copyBtn.querySelector('span');
+			function ok() { copyBtn.classList.add('done'); label.textContent = 'تم النسخ ✔'; setTimeout(function () { copyBtn.classList.remove('done'); label.textContent = 'نسخ الرابط'; }, 2000); }
+			if (navigator.clipboard) navigator.clipboard.writeText(u).then(ok, function () { window.prompt('انسخ الرابط:', u); });
+			else window.prompt('انسخ الرابط:', u);
+		});
+	}
+
 	/* Conversion tracking hooks (GA4 / GTM if present) */
 	d.addEventListener('click', function (e) {
 		var t = e.target.closest('[data-track]');

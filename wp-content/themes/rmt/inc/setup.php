@@ -156,6 +156,8 @@ function rmt_install() {
 	}
 
 	rmt_install_legal();
+	rmt_install_blog();
+	rmt_remove_hello_world();
 
 	update_option( 'show_on_front', 'page' );
 	update_option( 'page_on_front', $ids['home'] );
@@ -218,13 +220,18 @@ add_action( 'admin_init', 'rmt_maybe_install' );
 
 /** Primary navigation items (used when no WP menu is assigned). */
 function rmt_nav_items() {
-	return array(
+	$items = array(
 		'home'     => rmt_t( 'الرئيسية' ),
 		'about'    => rmt_t( 'من نحن' ),
 		'services' => rmt_t( 'خدماتنا' ),
 		'clients'  => rmt_t( 'عملاؤنا' ),
+		'blog'     => rmt_t( 'المدونة' ),
 		'contact'  => rmt_t( 'اتصل بنا' ),
 	);
+	if ( rmt_is_en() ) {
+		unset( $items['blog'] ); // The blog is Arabic only.
+	}
+	return $items;
 }
 
 /** Current core page key. */
@@ -235,6 +242,9 @@ function rmt_current_key() {
 	if ( is_page() ) {
 		$slug = get_post_field( 'post_name', get_queried_object_id() );
 		return 'en' === $slug ? 'home' : $slug;
+	}
+	if ( function_exists( 'rmt_is_blog' ) && rmt_is_blog() ) {
+		return 'blog';
 	}
 	return '';
 }

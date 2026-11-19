@@ -155,8 +155,8 @@ add_filter(
  */
 function rmt_alt_url( $lang ) {
 	$key = rmt_current_key();
-	if ( ! $key ) {
-		$key = 'home';
+	if ( ! $key || ( 'blog' === $key && 'en' === $lang ) ) {
+		$key = 'home'; // The blog is Arabic only.
 	}
 	return rmt_page_url( $key, $lang );
 }

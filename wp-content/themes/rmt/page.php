@@ -15,7 +15,7 @@ while ( have_posts() ) :
 	<section class="section">
 		<div class="container narrow">
 			<?php if ( $legal ) : ?>
-				<p class="legal-meta"><?php echo rmt_icon( 'clock', 16 ); // phpcs:ignore ?><?php rmt_te( 'آخر تحديث:' ); ?> <time datetime="<?php echo esc_attr( get_the_modified_date( 'c' ) ); ?>"><?php echo esc_html( get_the_modified_date( 'j F Y' ) ); ?></time></p>
+				<p class="legal-meta"><?php echo rmt_icon( 'clock', 16 ); // phpcs:ignore ?><?php rmt_te( 'آخر تحديث:' ); ?> <time datetime="<?php echo esc_attr( get_the_modified_date( 'c' ) ); ?>"><?php echo esc_html( rmt_ar_date( 'modified' ) ); ?></time></p>
 			<?php endif; ?>
 			<article class="prose<?php echo $legal ? ' legal' : ''; ?>"><?php the_content(); ?></article>
 			<?php if ( $legal ) : ?>

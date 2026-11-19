@@ -45,10 +45,27 @@ function rmt_seo_desc() {
 		return rmt_get( 'seo', $k . '_desc' );
 	}
 	if ( is_singular() ) {
-		$p = get_post();
+		$p      = get_post();
+		$custom = trim( (string) get_post_meta( $p->ID, '_rmt_seo_desc', true ) );
+		if ( $custom ) {
+			return $custom;
+		}
 		return wp_trim_words( wp_strip_all_tags( $p->post_excerpt ? $p->post_excerpt : $p->post_content ), 28, '…' );
 	}
+	if ( is_home() ) {
+		return 'مدونة رفال المدينة: نصائح وإرشادات في تنظيف الواجهات الزجاجية والأبراج، النظافة، تنظيف دكت المكيفات ومداخن المطابخ في الرياض والمملكة.';
+	}
+	if ( is_category() || is_tag() ) {
+		$d = wp_strip_all_tags( term_description() );
+		return $d ? wp_trim_words( $d, 28, '…' ) : 'مقالات ' . single_term_title( '', false ) . ' من مدونة رفال المدينة للمقاولات – نصائح عملية لملاك ومديري المباني.';
+	}
 	return rmt_get( 'seo', 'home_desc' );
+}
+
+/** Pagination-aware URL helper for archives. */
+function rmt_paged_url( $base ) {
+	$paged = (int) get_query_var( 'paged' );
+	return $paged > 1 ? trailingslashit( $base ) . 'page/' . $paged . '/' : $base;
 }
 
 /** Canonical URL (never carries query strings such as ?service= or ?sent=). */
@@ -59,6 +76,12 @@ function rmt_canonical() {
 	}
 	if ( is_singular() ) {
 		return get_permalink();
+	}
+	if ( is_home() ) {
+		return rmt_paged_url( rmt_page_url( 'blog' ) );
+	}
+	if ( is_category() || is_tag() ) {
+		return rmt_paged_url( get_term_link( get_queried_object() ) );
 	}
 	return '';
 }
@@ -85,6 +108,17 @@ function rmt_image_size( $url ) {
 add_filter(
 	'pre_get_document_title',
 	function ( $t ) {
+		if ( rmt_seo_on() && is_singular() ) {
+			$custom = trim( (string) get_post_meta( get_queried_object_id(), '_rmt_seo_title', true ) );
+			if ( $custom ) {
+				return $custom;
+			}
+			// Long titles: drop the " | site" suffix so Google shows the whole title.
+			$full = single_post_title( '', false ) . ' | ' . rmt_get( 'general', 'short_name' );
+			if ( mb_strlen( $full ) > 60 ) {
+				return single_post_title( '', false );
+			}
+		}
 		return rmt_seo_on() && ( rmt_seo_key() || is_404() ) ? rmt_seo_title() : $t;
 	}
 );
@@ -99,7 +133,7 @@ add_filter(
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification
 		$utility = isset( $_GET['sent'] ) || isset( $_GET['err'] );
-		if ( '1' === rmt_get( 'seo', 'noindex_site' ) || $utility || is_404() || is_search() || is_attachment() || is_author() || is_date() ) {
+		if ( '1' === rmt_get( 'seo', 'noindex_site' ) || $utility || is_404() || is_search() || is_attachment() || is_author() || is_date() || is_tag() ) {
 			return array( 'noindex' => true, 'follow' => true );
 		}
 		$robots['index']             = true;
@@ -174,7 +208,7 @@ function rmt_seo_head() {
 	$og = array(
 		'og:locale'           => $en ? 'en_US' : 'ar_SA',
 		'og:locale:alternate' => $en ? 'ar_SA' : 'en_US',
-		'og:type'             => 'home' === $key ? 'website' : 'article',
+		'og:type'             => is_singular( 'post' ) ? 'article' : ( 'home' === $key ? 'website' : 'website' ),
 		'og:site_name'        => $g['company_name'],
 		'og:title'            => $title,
 		'og:description'      => $desc,
@@ -182,6 +216,10 @@ function rmt_seo_head() {
 		'og:image'            => $img,
 		'og:image:alt'        => $title,
 	);
+	if ( is_singular( 'post' ) && has_post_thumbnail() ) {
+		$img             = get_the_post_thumbnail_url( null, 'large' );
+		$og['og:image']  = $img;
+	}
 	$dim = $img ? rmt_image_size( $img ) : array();
 	if ( $dim ) {
 		$og['og:image:width']  = $dim[0];
@@ -191,6 +229,18 @@ function rmt_seo_head() {
 	foreach ( $og as $p => $c ) {
 		if ( $c ) {
 			printf( '<meta property="%s" content="%s">' . "\n", esc_attr( $p ), esc_attr( $c ) );
+		}
+	}
+	if ( is_singular( 'post' ) ) {
+		printf( '<meta property="article:published_time" content="%s">' . "\n", esc_attr( get_the_date( 'c' ) ) );
+		printf( '<meta property="article:modified_time" content="%s">' . "\n", esc_attr( get_the_modified_date( 'c' ) ) );
+		foreach ( (array) get_the_category() as $c ) {
+			printf( '<meta property="article:section" content="%s">' . "\n", esc_attr( $c->name ) );
+		}
+		foreach ( (array) get_the_tags() as $t ) {
+			if ( $t ) {
+				printf( '<meta property="article:tag" content="%s">' . "\n", esc_attr( $t->name ) );
+			}
 		}
 	}
 	echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
@@ -402,6 +452,7 @@ function rmt_print_schema() {
 		}
 	}
 
+	$graph = array_merge( $graph, rmt_blog_schema( $orgid, $home ) );
 	echo '<script type="application/ld+json">' . wp_json_encode( array( '@context' => 'https://schema.org', '@graph' => $graph ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . '</script>' . "\n";
 }
 
@@ -425,7 +476,7 @@ add_action( 'wp_head', 'rmt_analytics', 99 );
 add_filter(
 	'wp_sitemaps_add_provider',
 	function ( $provider, $name ) {
-		return in_array( $name, array( 'users', 'taxonomies' ), true ) ? false : $provider;
+		return 'users' === $name ? false : $provider;
 	},
 	10,
 	2
@@ -537,3 +588,87 @@ add_filter(
 		return $parts;
 	}
 );
+
+/** Sitemap: only categories (tags are noindex). */
+add_filter(
+	'wp_sitemaps_taxonomies',
+	function ( $tax ) {
+		return isset( $tax['category'] ) ? array( 'category' => $tax['category'] ) : array();
+	}
+);
+
+/**
+ * Blog JSON-LD: BlogPosting + breadcrumb on articles, Blog + ItemList on listings.
+ *
+ * @param string $orgid Organization @id.
+ * @param string $home  Home URL.
+ * @return array
+ */
+function rmt_blog_schema( $orgid, $home ) {
+	$out  = array();
+	$blog = rmt_page_url( 'blog' );
+	if ( is_singular( 'post' ) ) {
+		$p    = get_post();
+		$url  = get_permalink( $p );
+		$cat  = get_the_category( $p->ID );
+		$tags = wp_list_pluck( (array) get_the_tags( $p->ID ), 'name' );
+		$art  = array(
+			'@type'            => 'BlogPosting',
+			'@id'              => $url . '#article',
+			'headline'         => get_the_title( $p ),
+			'description'      => rmt_seo_desc(),
+			'datePublished'    => get_the_date( 'c', $p ),
+			'dateModified'     => get_the_modified_date( 'c', $p ),
+			'inLanguage'       => 'ar-SA',
+			'mainEntityOfPage' => array( '@id' => $url . '#webpage' ),
+			'author'           => array( '@id' => $orgid ),
+			'publisher'        => array( '@id' => $orgid ),
+			'isPartOf'         => array( '@type' => 'Blog', '@id' => $blog . '#blog' ),
+			'wordCount'        => count( preg_split( '/\s+/u', trim( wp_strip_all_tags( $p->post_content ) ), -1, PREG_SPLIT_NO_EMPTY ) ),
+			'timeRequired'     => 'PT' . rmt_reading_time( $p ) . 'M',
+		);
+		if ( has_post_thumbnail( $p ) ) {
+			$art['image'] = get_the_post_thumbnail_url( $p, 'large' );
+		}
+		if ( $cat ) {
+			$art['articleSection'] = $cat[0]->name;
+		}
+		if ( array_filter( $tags ) ) {
+			$art['keywords'] = implode( '، ', array_filter( $tags ) );
+		}
+		$out[] = $art;
+		$crumb = array(
+			array( '@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $home ),
+			array( '@type' => 'ListItem', 'position' => 2, 'name' => 'المدونة', 'item' => $blog ),
+		);
+		if ( $cat ) {
+			$crumb[] = array( '@type' => 'ListItem', 'position' => 3, 'name' => $cat[0]->name, 'item' => get_category_link( $cat[0] ) );
+		}
+		$crumb[] = array( '@type' => 'ListItem', 'position' => count( $crumb ) + 1, 'name' => get_the_title( $p ), 'item' => $url );
+		$out[]   = array( '@type' => 'BreadcrumbList', 'itemListElement' => $crumb );
+	} elseif ( is_home() || is_category() ) {
+		global $wp_query;
+		$items = array();
+		foreach ( $wp_query->posts as $i => $p ) {
+			$items[] = array( '@type' => 'ListItem', 'position' => $i + 1, 'url' => get_permalink( $p ), 'name' => get_the_title( $p ) );
+		}
+		$out[] = array(
+			'@type'      => 'Blog',
+			'@id'        => $blog . '#blog',
+			'name'       => 'مدونة ' . rmt_get( 'general', 'short_name' ),
+			'url'        => $blog,
+			'inLanguage' => 'ar-SA',
+			'publisher'  => array( '@id' => $orgid ),
+		);
+		$out[] = array( '@type' => 'ItemList', 'itemListElement' => $items );
+		$crumb = array(
+			array( '@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $home ),
+			array( '@type' => 'ListItem', 'position' => 2, 'name' => 'المدونة', 'item' => $blog ),
+		);
+		if ( is_category() ) {
+			$crumb[] = array( '@type' => 'ListItem', 'position' => 3, 'name' => single_cat_title( '', false ), 'item' => get_term_link( get_queried_object() ) );
+		}
+		$out[] = array( '@type' => 'BreadcrumbList', 'itemListElement' => $crumb );
+	}
+	return $out;
+}

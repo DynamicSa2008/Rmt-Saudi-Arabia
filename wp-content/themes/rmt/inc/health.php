@@ -20,6 +20,7 @@ function rmt_expected_pages() {
 	foreach ( rmt_core_pages() as $slug => $title ) {
 		$list[] = array( $slug, $slug, '', $title );
 	}
+	$list[] = array( 'blog', 'blog', '', 'المدونة' );
 	$list[] = array( 'en', 'en', '', 'Home' );
 	$en_titles = array( 'about' => 'About Us', 'services' => 'Our Services', 'clients' => 'Our Clients', 'contact' => 'Contact Us' );
 	foreach ( $en_titles as $slug => $title ) {
@@ -151,6 +152,9 @@ function rmt_repair_pages() {
 			$log[] = $path . ': ⚠ الرابط محجوز لعنصر آخر (' . $now->post_name . ')';
 		}
 		$ids[ $path ] = $id;
+	}
+	if ( ! empty( $ids['blog'] ) ) {
+		update_option( 'page_for_posts', $ids['blog'] );
 	}
 	$home = isset( $ids['home'] ) ? $ids['home'] : 0;
 	if ( $home ) {
